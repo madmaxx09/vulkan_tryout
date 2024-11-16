@@ -28,6 +28,7 @@ namespace wind
 			void CreatePipelineLayout();
 			void CreatePipeline();
 			void CreateCommandBuffers();
+			void FreeCommandBuffers();
 			void drawFrame();
 			void recreateSwapChain();
 			void recordCommandBuffer(int imageIndex);

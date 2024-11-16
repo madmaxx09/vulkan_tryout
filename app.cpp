@@ -1,5 +1,6 @@
 #include "app.hpp"
 #include <array>
+#include <iostream>
 
 namespace wind
 {
@@ -41,7 +42,9 @@ namespace wind
 
 	void App::CreatePipeline()
 	{
-		auto pipelineConfig = Pipeline::defaultPipelineConfigInfo(swapchain->width(), swapchain->height());
+		PipelineConfigInfo pipelineConfig{};
+		Pipeline::defaultPipelineConfigInfo(pipelineConfig);
+
 		pipelineConfig.renderPass = swapchain->getRenderPass();
 		pipelineConfig.pipelineLayout = pipelineLayout;
 		pipeline = std::make_unique<Pipeline>(
@@ -63,6 +66,12 @@ namespace wind
 
 		if (vkAllocateCommandBuffers(device.device(), &allocInfo, commandBuffers.data()) != VK_SUCCESS)
 			throw std::runtime_error("failed to allocate commande buffers");	
+	}
+
+	void App::FreeCommandBuffers()
+	{
+		vkFreeCommandBuffers(device.device(), device.getCommandPool(), static_cast<uint32_t>(commandBuffers.size()), commandBuffers.data());
+		commandBuffers.clear();	
 	}
 
 	void App::recordCommandBuffer(int imageIndex)
@@ -90,6 +99,19 @@ namespace wind
 		renderPassInfo.pClearValues = clearValues.data();
 
 		vkCmdBeginRenderPass(commandBuffers[imageIndex], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+		VkViewport viewport{};
+		viewport.x = 0.0f;
+		viewport.y = 0.0f;
+		viewport.width = static_cast<float>(swapchain->getSwapChainExtent().width);
+		viewport.height = static_cast<float>(swapchain->getSwapChainExtent().height);
+		viewport.minDepth = 0.0f;
+		viewport.maxDepth = 1.0f;
+		VkRect2D scissor{{0, 0}, swapchain->getSwapChainExtent()};
+
+		vkCmdSetViewport(commandBuffers[imageIndex], 0, 1, &viewport);
+		vkCmdSetScissor(commandBuffers[imageIndex], 0, 1, &scissor);
+
 		pipeline->bind(commandBuffers[imageIndex]);
 		model->bind(commandBuffers[imageIndex]);
 		model->draw(commandBuffers[imageIndex]);
@@ -108,7 +130,15 @@ namespace wind
 			glfwWaitEvents();
 		}
 		vkDeviceWaitIdle(device.device());
-		swapchain = std::make_unique<LveSwapChain>(device, extent);
+
+		if (swapchain == nullptr)
+			swapchain = std::make_unique<LveSwapChain>(device, extent);
+		else {
+			swapchain = std::make_unique<LveSwapChain>(device, extent, std::move(swapchain));
+			if (swapchain->imageCount() != commandBuffers.size())
+				FreeCommandBuffers();
+				CreateCommandBuffers();
+		}
 		CreatePipeline();
 	}
 
@@ -127,7 +157,7 @@ namespace wind
 	{
 		uint32_t imageIndex;
 		auto result = swapchain->acquireNextImage(&imageIndex);
-
+		//std::cout << imageIndex << std::endl;
 		if (result == VK_ERROR_OUT_OF_DATE_KHR)
 		{
 			recreateSwapChain();
