@@ -2,9 +2,9 @@
 
 #include "window.hpp"
 #include "pipeline.hpp"
+#include "game_object.hpp"
 #include "engine.hpp"
 #include "swap_chain.hpp"
-#include "model.hpp"
 
 #include <memory>
 #include <vector>
@@ -24,7 +24,7 @@ namespace wind
 			App& operator=(const App & ) = delete;
 			void run();
 		private:
-			void LoadModels();
+			void LoadGameObjects();
 			void CreatePipelineLayout();
 			void CreatePipeline();
 			void CreateCommandBuffers();
@@ -32,6 +32,7 @@ namespace wind
 			void drawFrame();
 			void recreateSwapChain();
 			void recordCommandBuffer(int imageIndex);
+			void renderGameObjects(VkCommandBuffer commandBuffer);
 
 			Window appWindow{WIDTH, HEIGHT, "wind"};
 			EngineDevice device{appWindow};
@@ -39,7 +40,7 @@ namespace wind
 			std::unique_ptr<Pipeline> pipeline;
 			VkPipelineLayout pipelineLayout;
 			std::vector<VkCommandBuffer> commandBuffers;
-			std::unique_ptr<LveModel>	model;
+			std::vector<LveGameObject>	gameObjects;
 
 			// Pipeline pipeline{
 			// 	device,
