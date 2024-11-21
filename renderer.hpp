@@ -32,6 +32,10 @@ namespace wind
 				return commandBuffers[currentImageIndex];
 			}
 
+			int getFrameIndex() const { 
+				assert(isFrameStarted && "Can't get frame index when frame not in prog");
+				return currentFrameIndex;
+			}
 
 		private:
 			void CreateCommandBuffers();
@@ -42,7 +46,9 @@ namespace wind
 			EngineDevice& device;
 			std::unique_ptr<LveSwapChain> swapchain;
 			std::vector<VkCommandBuffer> commandBuffers;
+
 			uint32_t currentImageIndex;
+			int	currentFrameIndex;
 			bool isFrameStarted = false;
 
 			// Pipeline pipeline{

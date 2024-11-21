@@ -1,7 +1,6 @@
 #pragma once
 
 #include "window.hpp"
-#include "pipeline.hpp"
 #include "game_object.hpp"
 #include "engine.hpp"
 #include "renderer.hpp"
@@ -25,16 +24,11 @@ namespace wind
 			void run();
 		private:
 			void LoadGameObjects();
-			void CreatePipelineLayout();
-			void CreatePipeline();
-			void renderGameObjects(VkCommandBuffer commandBuffer);
 
 			Window appWindow{WIDTH, HEIGHT, "wind"};
 			EngineDevice device{appWindow};
 			LveRenderer lveRenderer{appWindow, device};
 
-			std::unique_ptr<Pipeline> pipeline;
-			VkPipelineLayout pipelineLayout;
 			std::vector<LveGameObject>	gameObjects;
 
 			// Pipeline pipeline{

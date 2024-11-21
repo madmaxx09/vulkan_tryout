@@ -20,7 +20,8 @@ namespace wind
  
 	void LveRenderer::CreateCommandBuffers()
 	{
-		commandBuffers.resize(swapchain->imageCount());
+		//commandBuffers.resize(swapchain->imageCount());
+		commandBuffers.resize(LveSwapChain::MAX_FRAMES_IN_FLIGHT);
 
 		VkCommandBufferAllocateInfo allocInfo{};
 		allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
@@ -51,10 +52,13 @@ namespace wind
 		if (swapchain == nullptr)
 			swapchain = std::make_unique<LveSwapChain>(device, extent);
 		else {
-			swapchain = std::make_unique<LveSwapChain>(device, extent, std::move(swapchain));
-			if (swapchain->imageCount() != commandBuffers.size())
-				FreeCommandBuffers();
-				CreateCommandBuffers();
+			std::shared_ptr<LveSwapChain> oldSwapchain = std::move(swapchain);
+			swapchain = std::make_unique<LveSwapChain>(device, extent, oldSwapchain);
+
+			if (!oldSwapchain->compareSwapFormat(*swapchain.get()))
+			{
+				throw std::runtime_error("Swap chain format has changed");
+			}
 		}
 	}
 
@@ -101,6 +105,7 @@ namespace wind
 		else if (result != VK_SUCCESS)
 			throw std::runtime_error("failed to present swap chain images");
 		isFrameStarted = false;
+		currentFrameIndex = (currentFrameIndex + 1) % LveSwapChain::MAX_FRAMES_IN_FLIGHT;
 	}
 
 	void LveRenderer::beginSwapchainRenderPass(VkCommandBuffer commandBuffer)
