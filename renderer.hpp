@@ -29,7 +29,7 @@ namespace wind
 			bool isFrameInProgress() const { return(isFrameStarted); }
 			VkCommandBuffer getCurrentCommandBuffer() const {
 				assert(isFrameStarted && "Can't get command buffer is frame is not in progress");
-				return commandBuffers[currentImageIndex];
+				return commandBuffers[currentFrameIndex];
 			}
 
 			int getFrameIndex() const { 
