@@ -3,6 +3,7 @@
 #include "pipeline.hpp"
 #include "game_object.hpp"
 #include "engine.hpp"
+#include "camera.hpp"
 
 #include <memory>
 #include <vector>
@@ -19,7 +20,10 @@ namespace wind
 			SimpleRenderSystem(const SimpleRenderSystem & ) = delete;
 			SimpleRenderSystem& operator=(const SimpleRenderSystem & ) = delete;
 
-			void renderGameObjects(VkCommandBuffer commandBuffer, std::vector<LveGameObject>& gameObjects);
+			void renderGameObjects(
+				VkCommandBuffer commandBuffer,
+				std::vector<LveGameObject>& gameObjects,
+				const LveCamera& camera);
 
 
 		private:

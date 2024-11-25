@@ -26,6 +26,7 @@ namespace wind
 			void endSwapchainRenderPass(VkCommandBuffer commandBuffer);
 
 			VkRenderPass getSwapChainRenderPass() const { return swapchain->getRenderPass(); }
+			float getAspectRatio() const { return swapchain->extentAspectRatio(); }
 			bool isFrameInProgress() const { return(isFrameStarted); }
 			VkCommandBuffer getCurrentCommandBuffer() const {
 				assert(isFrameStarted && "Can't get command buffer is frame is not in progress");
