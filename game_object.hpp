@@ -1,23 +1,28 @@
 #pragma once
 
 #include "model.hpp"
+#include <glm/gtc/matrix_transform.hpp>
 #include <memory>
 
 namespace wind
 {
-	struct Transform2DComponent
+	struct TransformComponent
 	{
-		glm::vec2 translation{};
-		glm::vec2 scale{1.f, 1.f}; 
-		float rotation;
+		glm::vec3 translation{};
+		glm::vec3 scale{1.f, 1.f, 1.f}; 
+		glm::vec3 rotation{};
+		//object orientation in 3D is represented by angles on each of the 3D axis
+		//look for quaternions encoding later (probly state of art atm)
+		//here we will use tait-bryan Y X Z representation
+		glm::mat4 mat4() { //fourth dimension is for homegeneous coordinate
+			auto transform = glm::translate(glm::mat4{1.f}, translation);
 
-		glm::mat2 mat2() {
-			const float s = glm::sin(rotation);
-			const float c = glm::cos(rotation);
-			glm::mat2 rotMatrix{{c, s}, {-s, c}}; 
+			transform = glm::rotate(transform, rotation.y, {0.f, 1.f, 0.f});
+			transform = glm::rotate(transform, rotation.x, {1.f, 0.f, 0.f});
+			transform = glm::rotate(transform, rotation.z, {0.f, 0.f, 1.f});
 
-			glm::mat2 scaleMat{{scale.x, .0f}, {.0f, scale.y}}; //col not rows
-			return rotMatrix * scaleMat;
+			transform = glm::scale(transform, scale);
+			return transform;
 		}
 	};
 	
@@ -41,7 +46,7 @@ namespace wind
 
 			std::shared_ptr<LveModel> model{};
 			glm::vec3 color{};
-			Transform2DComponent transform2d{};
+			TransformComponent transform{};
 
 		private:
 			LveGameObject(id_t objId) : id{objId} {}
