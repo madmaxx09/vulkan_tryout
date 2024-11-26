@@ -16,6 +16,3 @@ void main()
 	fragColor = color;
 }
 
-//vertexindex s'incremente adéquatement à chaque lancement de cette fonction (aka une fois par vertex)
-	//argument 3 == z_value, entre 0 (avant plan) et 1 (arrière plan) aka la "couche" à laquelle ce shader opère 
-	//argument 4 == toutes les valeurs de positions sont divisées par ce facteur à la fin jsp encore à quoi ça sert
