@@ -20,7 +20,13 @@ namespace wind
 				static std::vector<VkVertexInputAttributeDescription> getAttributeDescriptions();
 			};
 
-			LveModel(EngineDevice &device, const std::vector<Vertex> &vertices);
+			struct Builder
+			{
+				std::vector<Vertex> vertices{}; //to build/link our vertex buffer and index buffer
+				std::vector<uint32_t> indices{};
+			};
+
+			LveModel(EngineDevice &device, const LveModel::Builder &builder);
 			~LveModel();
 			
 			LveModel(const LveModel & ) = delete;
@@ -31,10 +37,17 @@ namespace wind
 
 		private:
 			EngineDevice	&device;
+
 			VkBuffer		vertexBuffer;
 			VkDeviceMemory	vertexBufferMemory;
 			uint32_t		vertexCount;
 
+			VkBuffer		indexBuffer;
+			VkDeviceMemory	indexBufferMemory;
+			uint32_t		indexCount;
+			bool			hasIndexBuffer = false;
+
 			void createVertexBuffers(const std::vector<Vertex> &vertices);
+			void createIndexBuffers(const std::vector<u_int32_t> &indices);
 	};
 }
