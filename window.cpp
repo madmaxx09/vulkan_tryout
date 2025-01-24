@@ -11,7 +11,7 @@ namespace wind
 	{
 		glfwInit();
 		glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API); //pour empécher que le fenetre s'ouvre avec son contexte par défaut qui est opengl
-		glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE); //pour empecher le resize car celui ci sera gérer autrement
+		glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE); //pour empecher le resize car celui ci sera géré autrement
 
 		window = glfwCreateWindow(_width, _height, window_name.c_str(), nullptr, nullptr); //param 3 doit etre cstr, 4 param pour etre fullscreen, 5 utile si on a une fenetre avec un contexte opengl
 		glfwSetWindowUserPointer(window, this);

@@ -42,7 +42,7 @@ namespace wind
 	void LveRenderer::recreateSwapChain()
 	{
 		auto extent = appWindow.getExtent();
-		while(extent.width == 0 || extent.height == 0)
+		while(extent.width == 0 || extent.height == 0)//means a resizing of the window is ongoing
 		{
 			extent = appWindow.getExtent();
 			glfwWaitEvents();
