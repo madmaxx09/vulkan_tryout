@@ -35,7 +35,8 @@ void LveSwapChain::init()
 	createSyncObjects();
 }
 
-LveSwapChain::~LveSwapChain() {
+LveSwapChain::~LveSwapChain()
+{
 	for (auto imageView : swapChainImageViews) {
 		vkDestroyImageView(device.device(), imageView, nullptr);
 	}
@@ -66,7 +67,8 @@ LveSwapChain::~LveSwapChain() {
 	}
 }
 
-VkResult LveSwapChain::acquireNextImage(uint32_t *imageIndex) {
+VkResult LveSwapChain::acquireNextImage(uint32_t *imageIndex)
+{
 	vkWaitForFences(
 			device.device(),
 			1,
@@ -86,7 +88,8 @@ VkResult LveSwapChain::acquireNextImage(uint32_t *imageIndex) {
 }
 
 VkResult LveSwapChain::submitCommandBuffers(
-		const VkCommandBuffer *buffers, uint32_t *imageIndex) {
+		const VkCommandBuffer *buffers, uint32_t *imageIndex)
+{
 	if (imagesInFlight[*imageIndex] != VK_NULL_HANDLE) {
 		vkWaitForFences(device.device(), 1, &imagesInFlight[*imageIndex], VK_TRUE, UINT64_MAX);
 	}
@@ -133,7 +136,8 @@ VkResult LveSwapChain::submitCommandBuffers(
 	return result;
 }
 
-void LveSwapChain::createSwapChain() {
+void LveSwapChain::createSwapChain()
+{
 	SwapChainSupportDetails swapChainSupport = device.getSwapChainSupport();
 
 	VkSurfaceFormatKHR surfaceFormat = chooseSwapSurfaceFormat(swapChainSupport.formats);
@@ -375,8 +379,10 @@ void LveSwapChain::createSyncObjects() {
 }
 
 VkSurfaceFormatKHR LveSwapChain::chooseSwapSurfaceFormat(
-		const std::vector<VkSurfaceFormatKHR> &availableFormats) {
-	for (const auto &availableFormat : availableFormats) {
+		const std::vector<VkSurfaceFormatKHR> &availableFormats)
+{
+	for (const auto &availableFormat : availableFormats)
+	{
 		if (availableFormat.format == VK_FORMAT_B8G8R8A8_SRGB &&
 				availableFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
 			return availableFormat;

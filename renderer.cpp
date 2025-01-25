@@ -51,7 +51,8 @@ namespace wind
 
 		if (swapchain == nullptr)
 			swapchain = std::make_unique<LveSwapChain>(device, extent);
-		else {
+		else
+		{
 			std::shared_ptr<LveSwapChain> oldSwapchain = std::move(swapchain);
 			swapchain = std::make_unique<LveSwapChain>(device, extent, oldSwapchain);
 

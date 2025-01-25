@@ -15,6 +15,11 @@ namespace wind
 {
 	App::App()
 	{
+		// std::cout << "Size of app : " << sizeof(App) << std::endl;
+		// std::cout << "Size of window : " << sizeof(Window) << std::endl;
+		// std::cout << "Size of cam : " << sizeof(LveCamera) << std::endl;
+		// std::cout << "Size of engine : " << sizeof(EngineDevice) << std::endl;
+		// std::cout << "Size of renderer : " << sizeof(LveRenderer) << std::endl;
 		LoadGameObjects();
 	}
 
@@ -35,7 +40,7 @@ namespace wind
 
 		while(!appWindow.shouldClose())
 		{
-			glfwPollEvents(); //get events like keystrokes but in our case mostly clicking x button
+			glfwPollEvents(); //get events like keystrokes/clicking/...
 
 			auto newTime = std::chrono::high_resolution_clock::now(); 
 			float frameTime = std::chrono::duration<float, std::chrono::seconds::period>(newTime - currentTime).count();
