@@ -32,13 +32,7 @@ namespace wind
 			
 			EngineDevice& device;
 
-			std::unique_ptr<Pipeline> pipeline;
+			std::unique_ptr<Pipeline> pipeline; //probly stack allocatable
 			VkPipelineLayout pipelineLayout;
-
-			// Pipeline pipeline{
-			// 	device,
-			// 	"shaders/shader.vert.spv",
-			// 	"shaders/frag.frag.spv", 
-			// 	Pipeline::defaultPipelineConfigInfo(WIDTH, HEIGHT)};
 	};
 }

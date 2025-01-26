@@ -401,27 +401,34 @@ SwapChainSupportDetails EngineDevice::querySwapChainSupport(VkPhysicalDevice dev
 }
 
 VkFormat EngineDevice::findSupportedFormat(
-		const std::vector<VkFormat> &candidates, VkImageTiling tiling, VkFormatFeatureFlags features) {
-	for (VkFormat format : candidates) {
+		const std::vector<VkFormat> &candidates, VkImageTiling tiling, VkFormatFeatureFlags features)
+{
+	for (VkFormat format : candidates)
+	{
 		VkFormatProperties props;
 		vkGetPhysicalDeviceFormatProperties(physicalDevice, format, &props);
 
-		if (tiling == VK_IMAGE_TILING_LINEAR && (props.linearTilingFeatures & features) == features) {
+		if (tiling == VK_IMAGE_TILING_LINEAR && (props.linearTilingFeatures & features) == features)
+		{
 			return format;
-		} else if (
-				tiling == VK_IMAGE_TILING_OPTIMAL && (props.optimalTilingFeatures & features) == features) {
+		}
+		else if (tiling == VK_IMAGE_TILING_OPTIMAL && (props.optimalTilingFeatures & features) == features)
+		{
 			return format;
 		}
 	}
 	throw std::runtime_error("failed to find supported format!");
 }
 
-uint32_t EngineDevice::findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties) {
+uint32_t EngineDevice::findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties)
+{
 	VkPhysicalDeviceMemoryProperties memProperties;
 	vkGetPhysicalDeviceMemoryProperties(physicalDevice, &memProperties);
-	for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++) {
-		if ((typeFilter & (1 << i)) &&
-				(memProperties.memoryTypes[i].propertyFlags & properties) == properties) {
+	for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++)
+	{
+		if ((typeFilter & (1 << i)) && //type filter is a bitmask, looks if i eth bit is set
+				(memProperties.memoryTypes[i].propertyFlags & properties) == properties) // & looks if bits of properties and property flags are same
+		{
 			return i;
 		}
 	}
@@ -535,8 +542,10 @@ void EngineDevice::createImageWithInfo(
 		const VkImageCreateInfo &imageInfo,
 		VkMemoryPropertyFlags properties,
 		VkImage &image,
-		VkDeviceMemory &imageMemory) {
-	if (vkCreateImage(device_, &imageInfo, nullptr, &image) != VK_SUCCESS) {
+		VkDeviceMemory &imageMemory)
+{
+	if (vkCreateImage(device_, &imageInfo, nullptr, &image) != VK_SUCCESS)
+	{
 		throw std::runtime_error("failed to create image!");
 	}
 
@@ -548,11 +557,13 @@ void EngineDevice::createImageWithInfo(
 	allocInfo.allocationSize = memRequirements.size;
 	allocInfo.memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits, properties);
 
-	if (vkAllocateMemory(device_, &allocInfo, nullptr, &imageMemory) != VK_SUCCESS) {
+	if (vkAllocateMemory(device_, &allocInfo, nullptr, &imageMemory) != VK_SUCCESS)
+	{
 		throw std::runtime_error("failed to allocate image memory!");
 	}
 
-	if (vkBindImageMemory(device_, image, imageMemory, 0) != VK_SUCCESS) {
+	if (vkBindImageMemory(device_, image, imageMemory, 0) != VK_SUCCESS)
+	{
 		throw std::runtime_error("failed to bind image memory!");
 	}
 }

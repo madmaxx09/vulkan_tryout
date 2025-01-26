@@ -15,7 +15,7 @@ namespace wind {
 class LveSwapChain
 {
 	public:
-		static constexpr int MAX_FRAMES_IN_FLIGHT = 2;
+		static constexpr int MAX_FRAMES_IN_FLIGHT = 2; //number of frame that will be processed concurently, this affects multithreading handling and other things
 
 		LveSwapChain(EngineDevice &deviceRef, VkExtent2D windowExtent);
 		LveSwapChain(EngineDevice &deviceRef, VkExtent2D windowExtent, std::shared_ptr<LveSwapChain> previous);
@@ -82,10 +82,10 @@ class LveSwapChain
 		VkSwapchainKHR swapChain;
 		std::shared_ptr<LveSwapChain> oldSwapchain;
 
-		std::vector<VkSemaphore> imageAvailableSemaphores;
+		std::vector<VkSemaphore> imageAvailableSemaphores;//used to sync gpu queues and make sure that rendering is done before presenting the frame
 		std::vector<VkSemaphore> renderFinishedSemaphores;
 		std::vector<VkFence> inFlightFences;
-		std::vector<VkFence> imagesInFlight;
+		std::vector<VkFence> imagesInFlight;//vkFences act a bit like mutexes, but you can chose wether you wait or not
 		size_t currentFrame = 0;
 };
 

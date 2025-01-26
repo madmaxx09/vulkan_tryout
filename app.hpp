@@ -30,11 +30,5 @@ namespace wind
 			LveRenderer lveRenderer{appWindow, device};
 
 			std::vector<LveGameObject>	gameObjects;
-
-			// Pipeline pipeline{
-			// 	device,
-			// 	"shaders/shader.vert.spv",
-			// 	"shaders/frag.frag.spv", 
-			// 	Pipeline::defaultPipelineConfigInfo(WIDTH, HEIGHT)};
 	};
 }

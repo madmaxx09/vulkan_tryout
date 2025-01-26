@@ -41,7 +41,7 @@ namespace wind
 	{
 		assert(configInfo.pipelineLayout != VK_NULL_HANDLE && "Cant create the pipeline, no layout provided in configInfo");
 		assert(configInfo.renderPass != VK_NULL_HANDLE && "Cant create the pipeline, no renderpass provided in configInfo");
-		auto vertCode = readFile(vertFilePath);
+		auto vertCode = readFile(vertFilePath); //get the compile spv files 
 		auto fragCode = readFile(fragFilePath);
 
 		createShaderModule(vertCode, &vertexShaderModule);
@@ -74,10 +74,10 @@ namespace wind
 		vertexInputInfo.pVertexAttributeDescriptions = attributeDescriptions.data();
 		vertexInputInfo.pVertexBindingDescriptions = bindingDescriptions.data();
 
-		//je rassemble ici toutes les structures contenant mes infos 
+		//gather all the infos structures in the pipeline info
 		VkGraphicsPipelineCreateInfo pipelineInfo{};
 		pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-		pipelineInfo.stageCount = 2; //nombre d'étape programmables dans le pipeline , pour l'instant les shaders vertex et frag
+		pipelineInfo.stageCount = 2; //amount of pragrammable stages in the pipeline for now only shaders; vertex et frag
 		pipelineInfo.pStages = shaderStage;
 		pipelineInfo.pVertexInputState = &vertexInputInfo;
 		pipelineInfo.pInputAssemblyState = &configInfo.inputAssemblyInfo;

@@ -17,7 +17,6 @@ namespace wind
 
 	SimpleRenderSystem::SimpleRenderSystem(EngineDevice& device, VkRenderPass renderPass) : device{device} 
 	{
-		
 		CreatePipelineLayout();
 		CreatePipeline(renderPass);
 	}

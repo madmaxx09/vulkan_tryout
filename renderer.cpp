@@ -20,9 +20,8 @@ namespace wind
  
 	void LveRenderer::CreateCommandBuffers()
 	{
-		//commandBuffers.resize(swapchain->imageCount());
 		commandBuffers.resize(LveSwapChain::MAX_FRAMES_IN_FLIGHT);
-
+		std::cout << "commande buffers size : " << commandBuffers.size() << std::endl;
 		VkCommandBufferAllocateInfo allocInfo{};
 		allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
 		allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
