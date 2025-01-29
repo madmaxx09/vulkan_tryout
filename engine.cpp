@@ -441,14 +441,16 @@ void EngineDevice::createBuffer(
 		VkBufferUsageFlags usage,
 		VkMemoryPropertyFlags properties,
 		VkBuffer &buffer,
-		VkDeviceMemory &bufferMemory) {
+		VkDeviceMemory &bufferMemory)
+{
 	VkBufferCreateInfo bufferInfo{};
 	bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
 	bufferInfo.size = size;
 	bufferInfo.usage = usage;
 	bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-	if (vkCreateBuffer(device_, &bufferInfo, nullptr, &buffer) != VK_SUCCESS) {
+	if (vkCreateBuffer(device_, &bufferInfo, nullptr, &buffer) != VK_SUCCESS)
+	{
 		throw std::runtime_error("failed to create vertex buffer!");
 	}
 
@@ -467,7 +469,8 @@ void EngineDevice::createBuffer(
 	vkBindBufferMemory(device_, buffer, bufferMemory, 0);
 }
 
-VkCommandBuffer EngineDevice::beginSingleTimeCommands() {
+VkCommandBuffer EngineDevice::beginSingleTimeCommands()
+{
 	VkCommandBufferAllocateInfo allocInfo{};
 	allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
 	allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
@@ -485,7 +488,8 @@ VkCommandBuffer EngineDevice::beginSingleTimeCommands() {
 	return commandBuffer;
 }
 
-void EngineDevice::endSingleTimeCommands(VkCommandBuffer commandBuffer) {
+void EngineDevice::endSingleTimeCommands(VkCommandBuffer commandBuffer)
+{
 	vkEndCommandBuffer(commandBuffer);
 
 	VkSubmitInfo submitInfo{};
@@ -499,7 +503,8 @@ void EngineDevice::endSingleTimeCommands(VkCommandBuffer commandBuffer) {
 	vkFreeCommandBuffers(device_, commandPool, 1, &commandBuffer);
 }
 
-void EngineDevice::copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size) {
+void EngineDevice::copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size)
+{
 	VkCommandBuffer commandBuffer = beginSingleTimeCommands();
 
 	VkBufferCopy copyRegion{};
@@ -512,7 +517,8 @@ void EngineDevice::copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSi
 }
 	
 void EngineDevice::copyBufferToImage(
-		VkBuffer buffer, VkImage image, uint32_t width, uint32_t height, uint32_t layerCount) {
+		VkBuffer buffer, VkImage image, uint32_t width, uint32_t height, uint32_t layerCount)
+{
 	VkCommandBuffer commandBuffer = beginSingleTimeCommands();
 
 	VkBufferImageCopy region{};

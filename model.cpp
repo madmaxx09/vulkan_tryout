@@ -1,13 +1,36 @@
 #include "model.hpp"
+#include "utils.hpp"
 
+#define TINYOBJLOADER_IMPLEMENTATION
+#include <tiny_obj_loader.h>
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/hash.hpp>
+
+#include <unordered_map>
 #include <cstring>
 #include <cassert>
+#include <iostream>
+
+
+namespace std
+{
+	template <>
+	struct hash<wind::LveModel::Vertex>
+	{
+		size_t operator()(wind::LveModel::Vertex const &vertex) const
+		{
+			size_t seed = 0;
+			wind::hashCombine(seed, vertex.position, vertex.color, vertex.normal, vertex.uv);
+			return seed;
+		}
+	};
+}
 
 namespace wind
 {
 	LveModel::LveModel(EngineDevice &device, const LveModel::Builder &builder) : device{device}
 	{
-		createVertexBuffers(builder.vertices); 	
+		createVertexBuffers(builder.vertices);
 		createIndexBuffers(builder.indices);
 	}
 
@@ -16,8 +39,20 @@ namespace wind
 		vkDestroyBuffer(device.device(), vertexBuffer, nullptr);
 		vkFreeMemory(device.device(), vertexBufferMemory, nullptr);
 		if (hasIndexBuffer)
+		{
 			vkDestroyBuffer(device.device(), indexBuffer, nullptr);
 			vkFreeMemory(device.device(), indexBufferMemory, nullptr);
+		}
+	}
+
+
+	std::unique_ptr<LveModel> LveModel::createModel_from_file(EngineDevice &device, const std::string &filepath)
+	{
+		Builder builder{};
+
+		builder.loadModel(filepath);
+		std::cout << "Vertices : " << builder.vertices.size() << std::endl;
+		return std::make_unique<LveModel>(device, builder);
 	}
 
 	void LveModel::bind(VkCommandBuffer commandBuffer)
@@ -43,8 +78,8 @@ namespace wind
 		assert(vertexCount >= 3 && "Vertex count should be at least 3");
 		VkDeviceSize bufferSize = sizeof(vertices[0]) * vertexCount;
 
-		VkBuffer stagingBuffer;
-		VkDeviceMemory stagingBufferMemory;
+		VkBuffer stagingBuffer;//using staging buffer is relevant when using static meshes, but if the cpu constantly applies variations to that mesh, the performance gain will be neglected or even worse
+		VkDeviceMemory stagingBufferMemory; //staging buffer is needed to then copy it into the gpu local vertex buffer
 		device.createBuffer(
 			bufferSize,
 			VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
@@ -60,11 +95,11 @@ namespace wind
 		device.createBuffer(
 			bufferSize,
 			VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, //precise que notre buffer contiendra des infos de vertex
-			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, 
+			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, //buffer will be local to the gpu, reducing overhead, we loose cpu view of the buffer to achieve that
 			vertexBuffer,
 			vertexBufferMemory);
 
-		device.copyBuffer(stagingBuffer, vertexBuffer, bufferSize);
+		device.copyBuffer(stagingBuffer, vertexBuffer, bufferSize); 
 		vkDestroyBuffer(device.device(), stagingBuffer, nullptr);
 		vkFreeMemory(device.device(), stagingBufferMemory, nullptr);
 	}
@@ -129,4 +164,67 @@ namespace wind
 		return attributeDescriptions;
 	}
 
+	void LveModel::Builder::loadModel(const std::string &filepath)
+	{
+		tinyobj::attrib_t attrib; //stores textures coord, position, color, normal
+		std::vector<tinyobj::shape_t> shapes;//index values
+		std::vector<tinyobj::material_t> materials;
+
+		std::string warn, error;
+
+		if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &error, filepath.c_str()))
+			throw std::runtime_error(warn + error);
+		vertices.clear();
+		indices.clear();
+
+		std::unordered_map<Vertex, u_int32_t> unique_vertices{};
+		for (const auto &shape : shapes)
+		{
+			for (const auto &mesh_index : shape.mesh.indices)
+			{
+				Vertex vertex{};
+				if (mesh_index.vertex_index >= 0) //if value is negative then no index was provided
+				{
+					vertex.position = {
+						attrib.vertices[3 * mesh_index.vertex_index + 0],
+						attrib.vertices[3 * mesh_index.vertex_index + 1],
+						attrib.vertices[3 * mesh_index.vertex_index + 2]
+					};
+
+					auto colorIndex = 3 * mesh_index.vertex_index + 2;
+					if (colorIndex < attrib.colors.size())
+					{
+						vertex.color = {
+							attrib.colors[colorIndex - 2],
+							attrib.colors[colorIndex - 1],
+							attrib.colors[colorIndex - 0]
+						};
+					}
+					else
+						vertex.color = {1.f, 1.f, 1.f}; //default
+				}
+				if (mesh_index.normal_index >= 0) //if value is negative then no index was provided
+				{
+					vertex.normal = {
+						attrib.normals[3 * mesh_index.normal_index + 0],
+						attrib.normals[3 * mesh_index.normal_index + 1],
+						attrib.normals[3 * mesh_index.normal_index + 2]
+					};
+				}
+				if (mesh_index.texcoord_index >= 0) //if value is negative then no index was provided
+				{
+					vertex.uv = {
+						attrib.vertices[3 * mesh_index.texcoord_index + 0],
+						attrib.vertices[3 * mesh_index.texcoord_index + 1]
+					};
+				}
+				if (unique_vertices.count(vertex) == 0) //check if vertex is new
+				{
+					unique_vertices[vertex] = static_cast<u_int32_t>(vertices.size());//to remember his position 
+					vertices.push_back(vertex);
+				}
+				indices.push_back(unique_vertices[vertex]); //give the right position to the indices vector
+			}
+		}
+	}
 }

@@ -89,9 +89,11 @@ VkResult LveSwapChain::acquireNextImage(uint32_t *imageIndex)
 VkResult LveSwapChain::submitCommandBuffers(
 		const VkCommandBuffer *buffers, uint32_t *imageIndex)
 {
-	if (imagesInFlight[*imageIndex] != VK_NULL_HANDLE) {
+	if (imagesInFlight[*imageIndex] != VK_NULL_HANDLE)
+	{
 		vkWaitForFences(device.device(), 1, &imagesInFlight[*imageIndex], VK_TRUE, UINT64_MAX);
 	}
+
 	imagesInFlight[*imageIndex] = inFlightFences[currentFrame];
 
 	VkSubmitInfo submitInfo = {};
@@ -112,7 +114,8 @@ VkResult LveSwapChain::submitCommandBuffers(
 
 	vkResetFences(device.device(), 1, &inFlightFences[currentFrame]);
 	if (vkQueueSubmit(device.graphicsQueue(), 1, &submitInfo, inFlightFences[currentFrame]) !=
-			VK_SUCCESS) {
+			VK_SUCCESS)
+	{
 		throw std::runtime_error("failed to submit draw command buffer!");
 	}
 
