@@ -6,6 +6,7 @@
 #include <glm/glm.hpp>
 #include <memory>
 #include <vector>
+#include "initialise_buffers.hpp"
 
 
 namespace wind 
@@ -53,12 +54,14 @@ namespace wind
 		private:
 			EngineDevice	&device;
 
-			VkBuffer		vertexBuffer;
-			VkDeviceMemory	vertexBufferMemory;
+			// VkBuffer		vertexBuffer;
+			// VkDeviceMemory	vertexBufferMemory;
+			t_buffer 		vertexBuffer;
 			uint32_t		vertexCount;
 
-			VkBuffer		indexBuffer;
-			VkDeviceMemory	indexBufferMemory;
+			// VkBuffer		indexBuffer;
+			// VkDeviceMemory	indexBufferMemory;
+			t_buffer		indexBuffer;
 			uint32_t		indexCount;
 			bool			hasIndexBuffer = false;
 

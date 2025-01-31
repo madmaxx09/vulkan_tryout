@@ -36,12 +36,10 @@ namespace wind
 
 	LveModel::~LveModel()
 	{
-		vkDestroyBuffer(device.device(), vertexBuffer, nullptr);
-		vkFreeMemory(device.device(), vertexBufferMemory, nullptr);
+		destroy_buffer(vertexBuffer, device);
 		if (hasIndexBuffer)
 		{
-			vkDestroyBuffer(device.device(), indexBuffer, nullptr);
-			vkFreeMemory(device.device(), indexBufferMemory, nullptr);
+			destroy_buffer(indexBuffer, device);
 		}
 	}
 
@@ -57,11 +55,11 @@ namespace wind
 
 	void LveModel::bind(VkCommandBuffer commandBuffer)
 	{
-		VkBuffer	buffers[] = {vertexBuffer};
+		VkBuffer	buffers[] = {vertexBuffer.buffer};
 		VkDeviceSize	offsets[] = {0};
 		vkCmdBindVertexBuffers(commandBuffer, 0, 1, buffers, offsets);
 		if (hasIndexBuffer)
-			vkCmdBindIndexBuffer(commandBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT32);
+			vkCmdBindIndexBuffer(commandBuffer, indexBuffer.buffer, 0, VK_INDEX_TYPE_UINT32);
 	}
 
 	void LveModel::draw(VkCommandBuffer commandBuffer)
@@ -78,30 +76,34 @@ namespace wind
 		assert(vertexCount >= 3 && "Vertex count should be at least 3");
 		VkDeviceSize bufferSize = sizeof(vertices[0]) * vertexCount;
 
-		VkBuffer stagingBuffer;//using staging buffer is relevant when using static meshes, but if the cpu constantly applies variations to that mesh, the performance gain will be neglected or even worse
-		VkDeviceMemory stagingBufferMemory; //staging buffer is needed to then copy it into the gpu local vertex buffer
-		device.createBuffer(
-			bufferSize,
-			VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-			stagingBuffer,
-			stagingBufferMemory);
+		t_buffer stagingBuffer;
+		initialise_buffer(stagingBuffer, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, device, bufferSize);
+
+		// VkBuffer stagingBuffer;//using staging buffer is relevant when using static meshes, but if the cpu constantly applies variations to that mesh, the performance gain will be neglected or even worse
+		// VkDeviceMemory stagingBufferMemory; //staging buffer is needed to then copy it into the gpu local vertex buffer
+		// device.createBuffer(
+		// 	bufferSize,
+		// 	VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+		// 	VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+		// 	stagingBuffer,
+		// 	stagingBufferMemory);
 		
 		void *data;
-		vkMapMemory(device.device(), stagingBufferMemory, 0, bufferSize, 0, &data); //map une partie de la mémoire du Cpu pour matcher la mémoire du gpu dans enginedevice
+		vkMapMemory(device.device(), stagingBuffer.memory, 0, bufferSize, 0, &data); //map une partie de la mémoire du Cpu pour matcher la mémoire du gpu dans enginedevice
 		memcpy(data, vertices.data(), static_cast<size_t>(bufferSize));
-		vkUnmapMemory(device.device(), stagingBufferMemory);
+		vkUnmapMemory(device.device(), stagingBuffer.memory);
 
-		device.createBuffer(
-			bufferSize,
-			VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, //precise que notre buffer contiendra des infos de vertex
-			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, //buffer will be local to the gpu, reducing overhead, we loose cpu view of the buffer to achieve that
-			vertexBuffer,
-			vertexBufferMemory);
+		initialise_buffer(vertexBuffer, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, device, bufferSize);
 
-		device.copyBuffer(stagingBuffer, vertexBuffer, bufferSize); 
-		vkDestroyBuffer(device.device(), stagingBuffer, nullptr);
-		vkFreeMemory(device.device(), stagingBufferMemory, nullptr);
+		// device.createBuffer(
+		// 	bufferSize,
+		// 	VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, //precise que notre buffer contiendra des infos de vertex
+		// 	VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, //buffer will be local to the gpu, reducing overhead, we loose cpu view of the buffer to achieve that
+		// 	vertexBuffer,
+		// 	vertexBufferMemory);
+
+		device.copyBuffer(stagingBuffer.buffer, vertexBuffer.buffer, bufferSize); 
+		destroy_buffer(stagingBuffer, device);
 	}
 
 	void LveModel::createIndexBuffers(const std::vector<u_int32_t> &indices)
@@ -113,30 +115,34 @@ namespace wind
 
 		VkDeviceSize bufferSize = sizeof(indices[0]) * indexCount;
 
-		VkBuffer stagingBuffer;
-		VkDeviceMemory stagingBufferMemory;
-		device.createBuffer(
-			bufferSize,
-			VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-			stagingBuffer,
-			stagingBufferMemory);
+		t_buffer stagingBuffer;
+		initialise_buffer(stagingBuffer, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, device, bufferSize);
+
+		// VkBuffer stagingBuffer;
+		// VkDeviceMemory stagingBufferMemory;
+		// device.createBuffer(
+		// 	bufferSize,
+		// 	VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+		// 	VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+		// 	stagingBuffer,
+		// 	stagingBufferMemory);
 		
 		void *data;
-		vkMapMemory(device.device(), stagingBufferMemory, 0, bufferSize, 0, &data); //map une partie de la mémoire du Cpu pour matcher la mémoire du gpu dans enginedevice
+		vkMapMemory(device.device(), stagingBuffer.memory, 0, bufferSize, 0, &data); //map une partie de la mémoire du Cpu pour matcher la mémoire du gpu dans enginedevice
 		memcpy(data, indices.data(), static_cast<size_t>(bufferSize));
-		vkUnmapMemory(device.device(), stagingBufferMemory);
+		vkUnmapMemory(device.device(), stagingBuffer.memory);
 
-		device.createBuffer(
-			bufferSize,
-			VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, //precise que notre buffer contiendra des infos de vertex
-			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, 
-			indexBuffer,
-			indexBufferMemory);
+		initialise_buffer(indexBuffer, VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, device, bufferSize);
 
-		device.copyBuffer(stagingBuffer, indexBuffer, bufferSize);
-		vkDestroyBuffer(device.device(), stagingBuffer, nullptr);
-		vkFreeMemory(device.device(), stagingBufferMemory, nullptr);
+		// device.createBuffer(
+		// 	bufferSize,
+		// 	VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, //precise que notre buffer contiendra des infos de vertex
+		// 	VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, 
+		// 	indexBuffer,
+		// 	indexBufferMemory);
+
+		device.copyBuffer(stagingBuffer.buffer, indexBuffer.buffer, bufferSize);
+		destroy_buffer(stagingBuffer, device);
 	}
 
 	std::vector<VkVertexInputBindingDescription> LveModel::Vertex::getBindingDescriptions()
