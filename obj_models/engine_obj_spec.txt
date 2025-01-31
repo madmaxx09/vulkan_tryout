@@ -1,0 +1,3 @@
+forward dir is positive Z
+up dir is negative Y
+faces are triangles

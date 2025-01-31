@@ -12,7 +12,7 @@ namespace wind
 	struct SimplePushConstantData
 	{
 		glm::mat4 transform{1.f}; //ce constructeur avec un mat glm initialise la diag avec le nombre donné 
-		alignas(16) glm::vec3 color;
+		glm::mat4 modelMatrix{1.f}; 
 	};
 
 	SimpleRenderSystem::SimpleRenderSystem(EngineDevice& device, VkRenderPass renderPass) : device{device} 
@@ -71,7 +71,7 @@ namespace wind
 		{
 
 			SimplePushConstantData push {};
-			push.color = obj.color;
+			auto modelMatrix = obj.transform.mat4();
 			push.transform = projectionView * obj.transform.mat4();
 
 			vkCmdPushConstants(

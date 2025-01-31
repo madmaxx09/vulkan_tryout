@@ -9,21 +9,12 @@ namespace wind
 	struct TransformComponent
 	{
 		glm::vec3 translation{};
-		glm::vec3 scale{1.f, 1.f, 1.f}; 
+		float scale; 
 		glm::vec3 rotation{};
 		//object orientation in 3D is represented by angles on each of the 3D axis
 		//look for quaternions encoding later (probly state of art atm)
 		//here we will use tait-bryan Y X Z representation
-		glm::mat4 mat4() { //fourth dimension is for homegeneous coordinate
-			auto transform = glm::translate(glm::mat4{1.f}, translation);
-
-			transform = glm::rotate(transform, rotation.y, {0.f, 1.f, 0.f});
-			transform = glm::rotate(transform, rotation.x, {1.f, 0.f, 0.f});
-			transform = glm::rotate(transform, rotation.z, {0.f, 0.f, 1.f});
-
-			transform = glm::scale(transform, scale);
-			return transform;
-		}
+		glm::mat4 mat4();
 	};
 	
 	class LveGameObject
@@ -38,7 +29,7 @@ namespace wind
 			static LveGameObject createGameObject()	
 			{
 				static id_t currentId = 0;
-				return LveGameObject{currentId++}; 
+				return LveGameObject{currentId++};
 			}
 
 			const id_t getId() { return (id) ; }
