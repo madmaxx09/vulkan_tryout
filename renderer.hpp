@@ -8,6 +8,7 @@
 #include <vector>
 #include <stdexcept>
 #include <cassert>
+#include <iostream>
 
 namespace wind
 {
@@ -30,6 +31,9 @@ namespace wind
 			bool isFrameInProgress() const { return(isFrameStarted); }
 			VkCommandBuffer getCurrentCommandBuffer() const {
 				assert(isFrameStarted && "Can't get command buffer is frame is not in progress");
+				// std::cout << currentFrameIndex << std::endl;
+				// std::cout << commandBuffers.size() << std::endl;
+				// std::cout << "getcurrentCB called" << std::endl;
 				return commandBuffers[currentFrameIndex];
 			}
 
@@ -49,7 +53,7 @@ namespace wind
 			std::vector<VkCommandBuffer> commandBuffers;
 
 			uint32_t currentImageIndex;
-			int	currentFrameIndex;
+			int	currentFrameIndex = 0;
 			bool isFrameStarted = false;
 
 			// Pipeline pipeline{

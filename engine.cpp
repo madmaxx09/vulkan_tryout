@@ -14,7 +14,8 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
 		VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
 		VkDebugUtilsMessageTypeFlagsEXT messageType,
 		const VkDebugUtilsMessengerCallbackDataEXT *pCallbackData,
-		void *pUserData) {
+		void *pUserData)
+{
 	std::cerr << "validation layer: " << pCallbackData->pMessage << std::endl;
 
 	return VK_FALSE;
@@ -24,7 +25,8 @@ VkResult CreateDebugUtilsMessengerEXT(
 		VkInstance instance,
 		const VkDebugUtilsMessengerCreateInfoEXT *pCreateInfo,
 		const VkAllocationCallbacks *pAllocator,
-		VkDebugUtilsMessengerEXT *pDebugMessenger) {
+		VkDebugUtilsMessengerEXT *pDebugMessenger)
+{
 	auto func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(
 			instance,
 			"vkCreateDebugUtilsMessengerEXT");
@@ -38,7 +40,8 @@ VkResult CreateDebugUtilsMessengerEXT(
 void DestroyDebugUtilsMessengerEXT(
 		VkInstance instance,
 		VkDebugUtilsMessengerEXT debugMessenger,
-		const VkAllocationCallbacks *pAllocator) {
+		const VkAllocationCallbacks *pAllocator)
+{
 	auto func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(
 			instance,
 			"vkDestroyDebugUtilsMessengerEXT");
@@ -125,7 +128,8 @@ void EngineDevice::pickPhysicalDevice()
 
 	for (const auto &device : devices)
 	{
-		if (isDeviceSuitable(device)) {
+		if (isDeviceSuitable(device))
+		{
 			physicalDevice = device;
 			break;
 		}
@@ -173,7 +177,9 @@ void EngineDevice::createLogicalDevice()
 	{
 		createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
 		createInfo.ppEnabledLayerNames = validationLayers.data();
-	} else {
+	}
+	else
+	{
 		createInfo.enabledLayerCount = 0;
 	}
 
@@ -241,7 +247,8 @@ void EngineDevice::populateDebugMessengerCreateInfo(
 	createInfo.pUserData = nullptr;	// Optional
 }
 
-void EngineDevice::setupDebugMessenger() {
+void EngineDevice::setupDebugMessenger()
+{
 	if (!enableValidationLayers) return;
 	VkDebugUtilsMessengerCreateInfoEXT createInfo;
 	populateDebugMessengerCreateInfo(createInfo);
@@ -258,18 +265,22 @@ bool EngineDevice::checkValidationLayerSupport()
 	std::vector<VkLayerProperties> availableLayers(layerCount);
 	vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());
 
-	for (const char *layerName : validationLayers) {
+	for (const char *layerName : validationLayers)
+	{
 		bool layerFound = false;
 
-		for (const auto &layerProperties : availableLayers) {
-		if (strcmp(layerName, layerProperties.layerName) == 0) {
-			layerFound = true;
-			break;
-		}
+		for (const auto &layerProperties : availableLayers)
+		{
+			if (strcmp(layerName, layerProperties.layerName) == 0)
+			{
+				layerFound = true;
+				break;
+			}
 		}
 
-		if (!layerFound) {
-		return false;
+		if (!layerFound)
+		{
+			return false;
 		}
 	}
 
@@ -300,14 +311,16 @@ void EngineDevice::hasGflwRequiredInstanceExtensions()
 
 	std::cout << "available extensions:" << std::endl;
 	std::unordered_set<std::string> available;
-	for (const auto &extension : extensions) {
+	for (const auto &extension : extensions)
+	{
 		std::cout << "\t" << extension.extensionName << std::endl;
 		available.insert(extension.extensionName);
 	}
 
 	std::cout << "required extensions:" << std::endl;
 	auto requiredExtensions = getRequiredExtensions();
-	for (const auto &required : requiredExtensions) {
+	for (const auto &required : requiredExtensions)
+	{
 		std::cout << "\t" << required << std::endl;
 		if (available.find(required) == available.end()) {
 			throw std::runtime_error("Missing required glfw extension");

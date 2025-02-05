@@ -1,8 +1,12 @@
 #include "initialise_buffers.hpp"
+#include <iostream>
 
 namespace wind
 {
-	void initialise_buffer(t_buffer &buffer, VkBufferUsageFlags usageFlags, VkMemoryPropertyFlags memoryFlags, EngineDevice &device, VkDeviceSize bufferSize)
+	//last argument is optionnal it allows double or more buffering with the same buffer object
+	void initialise_buffer(t_buffer &buffer, VkBufferUsageFlags usageFlags,
+		VkMemoryPropertyFlags memoryFlags, EngineDevice &device,
+		VkDeviceSize bufferSize)
 	{
 		device.createBuffer(
 			bufferSize,
@@ -11,7 +15,8 @@ namespace wind
 			buffer.buffer,
 			buffer.memory
 		);
-	}
+		std::cout << "does buffer == buffer : " << buffer.buffer << std::endl;
+ 	}
 
 	void destroy_buffer(t_buffer &buffer, EngineDevice &device)
 	{

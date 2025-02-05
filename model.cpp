@@ -77,30 +77,19 @@ namespace wind
 		VkDeviceSize bufferSize = sizeof(vertices[0]) * vertexCount;
 
 		t_buffer stagingBuffer;
-		initialise_buffer(stagingBuffer, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, device, bufferSize);
+		initialise_buffer(stagingBuffer,
+			VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+			device, bufferSize);
 
-		// VkBuffer stagingBuffer;//using staging buffer is relevant when using static meshes, but if the cpu constantly applies variations to that mesh, the performance gain will be neglected or even worse
-		// VkDeviceMemory stagingBufferMemory; //staging buffer is needed to then copy it into the gpu local vertex buffer
-		// device.createBuffer(
-		// 	bufferSize,
-		// 	VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-		// 	VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-		// 	stagingBuffer,
-		// 	stagingBufferMemory);
-		
-		void *data;
-		vkMapMemory(device.device(), stagingBuffer.memory, 0, bufferSize, 0, &data); //map une partie de la mémoire du Cpu pour matcher la mémoire du gpu dans enginedevice
-		memcpy(data, vertices.data(), static_cast<size_t>(bufferSize));
+		vkMapMemory(device.device(), stagingBuffer.memory, 0, bufferSize, 0, &stagingBuffer.data); //map une partie de la mémoire du Cpu pour matcher la mémoire du gpu dans enginedevice
+		memcpy(stagingBuffer.data, vertices.data(), static_cast<size_t>(bufferSize));
 		vkUnmapMemory(device.device(), stagingBuffer.memory);
 
-		initialise_buffer(vertexBuffer, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, device, bufferSize);
-
-		// device.createBuffer(
-		// 	bufferSize,
-		// 	VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, //precise que notre buffer contiendra des infos de vertex
-		// 	VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, //buffer will be local to the gpu, reducing overhead, we loose cpu view of the buffer to achieve that
-		// 	vertexBuffer,
-		// 	vertexBufferMemory);
+		initialise_buffer(vertexBuffer,
+			VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+			device, bufferSize);
 
 		device.copyBuffer(stagingBuffer.buffer, vertexBuffer.buffer, bufferSize); 
 		destroy_buffer(stagingBuffer, device);
@@ -116,30 +105,20 @@ namespace wind
 		VkDeviceSize bufferSize = sizeof(indices[0]) * indexCount;
 
 		t_buffer stagingBuffer;
-		initialise_buffer(stagingBuffer, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, device, bufferSize);
-
-		// VkBuffer stagingBuffer;
-		// VkDeviceMemory stagingBufferMemory;
-		// device.createBuffer(
-		// 	bufferSize,
-		// 	VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-		// 	VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-		// 	stagingBuffer,
-		// 	stagingBufferMemory);
+		initialise_buffer(stagingBuffer,
+			VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+			device, bufferSize);
 		
-		void *data;
-		vkMapMemory(device.device(), stagingBuffer.memory, 0, bufferSize, 0, &data); //map une partie de la mémoire du Cpu pour matcher la mémoire du gpu dans enginedevice
-		memcpy(data, indices.data(), static_cast<size_t>(bufferSize));
+		//void *data;
+		vkMapMemory(device.device(), stagingBuffer.memory, 0, bufferSize, 0, &stagingBuffer.data); //map une partie de la mémoire du Cpu pour matcher la mémoire du gpu dans enginedevice
+		memcpy(stagingBuffer.data, indices.data(), static_cast<size_t>(bufferSize));
 		vkUnmapMemory(device.device(), stagingBuffer.memory);
 
-		initialise_buffer(indexBuffer, VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, device, bufferSize);
-
-		// device.createBuffer(
-		// 	bufferSize,
-		// 	VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, //precise que notre buffer contiendra des infos de vertex
-		// 	VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, 
-		// 	indexBuffer,
-		// 	indexBufferMemory);
+		initialise_buffer(indexBuffer,
+			VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+			device, bufferSize);
 
 		device.copyBuffer(stagingBuffer.buffer, indexBuffer.buffer, bufferSize);
 		destroy_buffer(stagingBuffer, device);
@@ -211,13 +190,13 @@ namespace wind
 				if (mesh_index.texcoord_index >= 0) //if value is negative then no index was provided
 				{
 					vertex.uv = {
-						attrib.vertices[3 * mesh_index.texcoord_index + 0],
-						attrib.vertices[3 * mesh_index.texcoord_index + 1]
+						attrib.texcoords[2 * mesh_index.texcoord_index + 0],
+						attrib.texcoords[2 * mesh_index.texcoord_index + 1]
 					};
 				}
 				if (unique_vertices.count(vertex) == 0) //check if vertex is new
 				{
-					unique_vertices[vertex] = static_cast<u_int32_t>(vertices.size());//to remember his position 
+					unique_vertices[vertex] = static_cast<u_int32_t>(vertices.size());//to remember his position //this line calls our hashcombine function
 					vertices.push_back(vertex);
 				}
 				indices.push_back(unique_vertices[vertex]); //give the right position to the indices vector

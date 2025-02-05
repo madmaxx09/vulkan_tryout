@@ -4,6 +4,7 @@
 #include "game_object.hpp"
 #include "engine.hpp"
 #include "camera.hpp"
+#include "frame_info.hpp"
 
 #include <memory>
 #include <vector>
@@ -21,9 +22,8 @@ namespace wind
 			SimpleRenderSystem& operator=(const SimpleRenderSystem & ) = delete;
 
 			void renderGameObjects(
-				VkCommandBuffer commandBuffer,
-				std::vector<LveGameObject>& gameObjects,
-				const LveCamera& camera);
+				s_frame_info &frameinfo,
+				std::vector<LveGameObject>& gameObjects);
 
 
 		private:

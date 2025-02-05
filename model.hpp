@@ -54,14 +54,10 @@ namespace wind
 		private:
 			EngineDevice	&device;
 
-			// VkBuffer		vertexBuffer;
-			// VkDeviceMemory	vertexBufferMemory;
-			t_buffer 		vertexBuffer;
+			t_buffer 		vertexBuffer{}; //t_buffer is vkbuffer and vkdevicememory together
 			uint32_t		vertexCount;
 
-			// VkBuffer		indexBuffer;
-			// VkDeviceMemory	indexBufferMemory;
-			t_buffer		indexBuffer;
+			t_buffer		indexBuffer{};
 			uint32_t		indexCount;
 			bool			hasIndexBuffer = false;
 
