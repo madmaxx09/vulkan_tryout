@@ -15,7 +15,7 @@ namespace wind
 			buffer.buffer,
 			buffer.memory
 		);
-		std::cout << "does buffer == buffer : " << buffer.buffer << std::endl;
+		//std::cout << "does buffer == buffer : " << buffer.buffer << std::endl;
  	}
 
 	void destroy_buffer(t_buffer &buffer, EngineDevice &device)

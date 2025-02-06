@@ -10,6 +10,7 @@
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
 #include <glm/gtc/constants.hpp>
+#include <unordered_map>
 
 namespace wind
 {
@@ -46,7 +47,60 @@ namespace wind
 
 	void App::run()
 	{
-		SimpleRenderSystem simpleRenderSystem{device, lveRenderer.getSwapChainRenderPass()};
+
+		GlobalUBO ubo{};
+
+		t_buffer uboBuffers[LveSwapChain::MAX_FRAMES_IN_FLIGHT];//one buffer per frame, to allow updating a buffer without affecting the currently rendered frame
+		for (t_buffer &buffer : uboBuffers)
+		{
+			//std::cout << &buffer << std::endl;
+			initialise_buffer(buffer, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+				VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,
+				device, sizeof(GlobalUBO));
+			vkMapMemory(device.device(), buffer.memory, 0, sizeof(GlobalUBO), 0, &buffer.data);
+			//std::cout << "does buffer == buffer : " << buffer.buffer << std::endl;
+
+		}
+
+		//this whole block should look better
+		VkDescriptorSetLayout layout{};
+
+		std::unordered_map<uint32_t, VkDescriptorSetLayoutBinding> bindings{};
+
+		VkDescriptorSetLayoutBinding layoutBinding{};
+		layoutBinding.binding = 0; //binding number in the shader
+		layoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+		layoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+		layoutBinding.descriptorCount = 1;
+		bindings[0] = layoutBinding;
+
+		std::vector<VkDescriptorSetLayoutBinding> setBinding{};
+		for (auto key_val : bindings)
+		{
+			setBinding.push_back(key_val.second);
+		}
+
+		VkDescriptorSetLayoutCreateInfo layoutInfo{};
+		layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+		layoutInfo.bindingCount = static_cast<uint32_t>(setBinding.size());
+		layoutInfo.pBindings = setBinding.data();
+
+		if (vkCreateDescriptorSetLayout(device.device(), &layoutInfo, nullptr, &layout) != VK_SUCCESS)
+			throw std::runtime_error("failed to create descriptor set layout");
+		//until here
+		
+		VkDescriptorSet globalDescriptorSets[LveSwapChain::MAX_FRAMES_IN_FLIGHT];
+		for (int i = 0; i < LveSwapChain::MAX_FRAMES_IN_FLIGHT; i++)
+		{
+			DescriptorWriter writer{};
+			VkDescriptorBufferInfo bufferInfo{};
+			writer.write_buffer(0, uboBuffers[i].buffer, VK_WHOLE_SIZE, 0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, bufferInfo);
+			//need to write to buffer need buffer info (vk device size whole size and offset 0)
+			globalDescriptorPool.allocate(device, layout, globalDescriptorSets[i], nullptr);
+			writer.update_set(device, globalDescriptorSets[i]);
+		}
+
+		SimpleRenderSystem simpleRenderSystem{device, lveRenderer.getSwapChainRenderPass(), layout};
 		LveCamera camera{};
 		camera.setViewTarget(glm::vec3(-1.f, -2.f, 2.f), glm::vec3(0.f, 0.f, 2.5f));
 
@@ -54,51 +108,6 @@ namespace wind
 		KeyboardMovementController cameraController{};
 
 		auto currentTime = std::chrono::high_resolution_clock::now(); 
-
-		GlobalUBO ubo{};
-
-		t_buffer uboBuffers[LveSwapChain::MAX_FRAMES_IN_FLIGHT];//one buffer per frame, to allow updating a buffer without affecting the currently rendered frame
-		for (t_buffer &buffer : uboBuffers)
-		{
-			initialise_buffer(buffer, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-				VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,
-				device, sizeof(GlobalUBO));
-			vkMapMemory(device.device(), buffer.memory, 0, sizeof(GlobalUBO), 0, &buffer.data);
-			std::cout << "does buffer == buffer : " << buffer.buffer << std::endl;
-
-		}
-		std::cout << "Random buffer data : " << uboBuffers[0].buffer << std::endl;
-		//this whole block should look better
-		VkDescriptorSetLayout layout{};
-
-		VkDescriptorSetLayoutBinding layoutBinding{};
-		layoutBinding.binding = 0; //binding number in the shader
-		layoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-		layoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-		layoutBinding.descriptorCount = 1;
-		layoutBinding.pImmutableSamplers = nullptr;
-
-		VkDescriptorSetLayoutCreateInfo layoutInfo{};
-		layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-		layoutInfo.bindingCount = 1;
-		layoutInfo.pBindings = &layoutBinding;
-		if (vkCreateDescriptorSetLayout(device.device(), &layoutInfo, nullptr, &layout) != VK_SUCCESS)
-			throw std::runtime_error("failed to create descriptor set layout");
-		//until here
-		
-
-		VkDescriptorSet globalDescriptorSets[LveSwapChain::MAX_FRAMES_IN_FLIGHT];
-		for (int i = 0; i < LveSwapChain::MAX_FRAMES_IN_FLIGHT; i++)
-		{
-			DescriptorWriter writer{};
-			std::cout << "does buffer == buffer : " << uboBuffers[i].buffer << std::endl;
-
-			writer.write_buffer(0, uboBuffers[i].buffer, VK_WHOLE_SIZE, 0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
-			//need to write to buffer need buffer info (vk device size whole size and offset 0)
-			globalDescriptorPool.allocate(device, layout, globalDescriptorSets[i], nullptr);
-			writer.update_set(device, globalDescriptorSets[i]);
-		}
-
 
 		while(!appWindow.shouldClose())
 		{
@@ -121,7 +130,8 @@ namespace wind
 					frameIndex,
 					frameTime, 
 					commandBuffer,
-					camera
+					camera,
+					globalDescriptorSets[frameIndex]
 				};
 
 

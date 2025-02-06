@@ -115,13 +115,11 @@ namespace wind
 		//return descriptorSet;
 	}
 
-	void DescriptorWriter::write_buffer(int binding, VkBuffer buffer, size_t size, size_t offset, VkDescriptorType type)
+	void DescriptorWriter::write_buffer(int binding, VkBuffer buffer, size_t size, size_t offset, VkDescriptorType type, VkDescriptorBufferInfo &info)
 	{
-		VkDescriptorBufferInfo info{};
 		info.buffer = buffer;
 		info.offset = offset;
 		info.range = size;
-		std::cout << "offset is : " << info.offset << std::endl;
 
 		VkWriteDescriptorSet write{};
 		write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -132,7 +130,6 @@ namespace wind
 		write.pBufferInfo = &info;
 
 		writes.push_back(write);
-		
 	}
 
 	void DescriptorWriter::write_image(int binding, VkImageView image, VkSampler sampler, VkImageLayout layout, VkDescriptorType type)
@@ -158,6 +155,7 @@ namespace wind
 		for (VkWriteDescriptorSet &write : writes)
 		{
 			write.dstSet = set;
+			//std::cout << "buffer : " << write.pBufferInfo->buffer << " set : " << set << std::endl;
 		}
 
 		vkUpdateDescriptorSets(device.device(), (uint32_t)writes.size(), writes.data(), 0, nullptr);

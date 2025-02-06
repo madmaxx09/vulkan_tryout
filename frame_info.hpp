@@ -11,6 +11,7 @@ namespace wind
 		float			frameTime;
 		VkCommandBuffer	commandBuffer;
 		LveCamera		&camera;
+		VkDescriptorSet	globalDescriptorSet;
 	} t_frame_info;
 	
 }

@@ -15,7 +15,7 @@ namespace wind
 	class SimpleRenderSystem
 	{
 		public:
-			SimpleRenderSystem(EngineDevice& device, VkRenderPass renderPass);
+			SimpleRenderSystem(EngineDevice& device, VkRenderPass renderPass, VkDescriptorSetLayout globalSetLayout);
 			~SimpleRenderSystem();
 
 			SimpleRenderSystem(const SimpleRenderSystem & ) = delete;
@@ -27,7 +27,7 @@ namespace wind
 
 
 		private:
-			void CreatePipelineLayout();
+			void CreatePipelineLayout(VkDescriptorSetLayout globalSetLayout);
 			void CreatePipeline(VkRenderPass renderPass);
 			
 			EngineDevice& device;
