@@ -66,8 +66,6 @@ namespace wind
 	{
 		pipeline->bind(frameInfo.commandBuffer);
 
-		//auto projectionView = frameInfo.camera.getProjection() * frameInfo.camera.getView();
-
 		vkCmdBindDescriptorSets(
 			frameInfo.commandBuffer,
 			VK_PIPELINE_BIND_POINT_GRAPHICS,

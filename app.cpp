@@ -14,13 +14,17 @@
 
 namespace wind
 {
-
-	struct GlobalUBO
+	//meh using vec4 for colors instead of vec3 where color scaling is on xyz might be heavier for no reason idk
+	struct GlobalUBO //if something does not work always check alignement of ubo into shader (std140) 
 	{
 		glm::mat4	projectionView{1.f};
-		glm::vec3	lightDirection = glm::normalize(glm::vec3{1.f, -3.f, -1.f});
-	};
+		glm::vec4	ambientLight{1.f, 1.f, 1.f, 0.02f}; //w is light intensity
+		glm::vec3	lightPosition{-1.f};
+		alignas(16) glm::vec4 lightColor{1.f}; //so here intensity is 1
 
+
+	};
+ 
 	App::App()
 	{
 		// std::cout << "Size of app : " << sizeof(App) << std::endl;
@@ -100,11 +104,14 @@ namespace wind
 			writer.update_set(device, globalDescriptorSets[i]);
 		}
 
-		SimpleRenderSystem simpleRenderSystem{device, lveRenderer.getSwapChainRenderPass(), layout};
+		SimpleRenderSystem simpleRenderSystem{device, lveRenderer.getSwapChainRenderPass(), layout}; //pipeline is created here
 		LveCamera camera{};
 		camera.setViewTarget(glm::vec3(-1.f, -2.f, 2.f), glm::vec3(0.f, 0.f, 2.5f));
 
 		auto viewerObject = LveGameObject::createGameObject();
+		viewerObject.transform.translation.z = -2.5f;
+
+
 		KeyboardMovementController cameraController{};
 
 		auto currentTime = std::chrono::high_resolution_clock::now(); 
@@ -167,7 +174,7 @@ namespace wind
 
 		auto flatVase = LveGameObject::createGameObject();
 		flatVase.model = lveModel;
-		flatVase.transform.translation = {0.5f, 0.5f, 2.5f};
+		flatVase.transform.translation = {0.5f, 0.5f, 0.f};
 		flatVase.transform.scale = 3.0f;
 		gameObjects.push_back(std::move(flatVase));
 
@@ -175,8 +182,16 @@ namespace wind
 
 		auto gameObj = LveGameObject::createGameObject();
 		gameObj.model = lveModel;
-		gameObj.transform.translation = {-0.5f, 0.5f, 2.5f};
+		gameObj.transform.translation = {-0.5f, 0.5f, 0.f};
 		gameObj.transform.scale = 3.0f;
 		gameObjects.push_back(std::move(gameObj));
+
+		lveModel = LveModel::createModel_from_file(device, "obj_models/floor.obj");
+
+		auto floor = LveGameObject::createGameObject();
+		floor.model = lveModel;
+		floor.transform.translation = {0.f, 0.5f, 0.f};
+		floor.transform.scale = 3.0f;
+		gameObjects.push_back(std::move(floor));
 	}
 }
