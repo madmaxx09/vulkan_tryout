@@ -3,7 +3,7 @@
 #include "model.hpp"
 #include <glm/gtc/matrix_transform.hpp>
 #include <memory>
-
+#include <unordered_map>
 namespace wind
 {
 	struct TransformComponent
@@ -20,17 +20,21 @@ namespace wind
 	class LveGameObject
 	{
 		public:
-			LveGameObject(const LveGameObject&) = delete;
-			LveGameObject& operator=(const LveGameObject&) = delete;
-			LveGameObject(LveGameObject &&) = default;
-			LveGameObject& operator=(LveGameObject &&) = default;
-
 			using id_t = unsigned int;
+			using Map = std::unordered_map<id_t, LveGameObject>;
+			
 			static LveGameObject createGameObject()	
 			{
 				static id_t currentId = 0;
 				return LveGameObject{currentId++};
 			}
+
+
+			LveGameObject(const LveGameObject&) = delete;
+			LveGameObject& operator=(const LveGameObject&) = delete;
+			LveGameObject(LveGameObject &&) = default;
+			LveGameObject& operator=(LveGameObject &&) = default;
+
 
 			const id_t getId() { return (id) ; }
 

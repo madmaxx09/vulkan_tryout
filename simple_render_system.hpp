@@ -21,9 +21,7 @@ namespace wind
 			SimpleRenderSystem(const SimpleRenderSystem & ) = delete;
 			SimpleRenderSystem& operator=(const SimpleRenderSystem & ) = delete;
 
-			void renderGameObjects(
-				s_frame_info &frameinfo,
-				std::vector<LveGameObject>& gameObjects);
+			void renderGameObjects(s_frame_info &frameinfo);
 
 
 		private:

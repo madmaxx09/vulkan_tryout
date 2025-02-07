@@ -74,7 +74,7 @@ namespace wind
 		VkDescriptorSetLayoutBinding layoutBinding{};
 		layoutBinding.binding = 0; //binding number in the shader
 		layoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-		layoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+		layoutBinding.stageFlags = VK_SHADER_STAGE_ALL_GRAPHICS;
 		layoutBinding.descriptorCount = 1;
 		bindings[0] = layoutBinding;
 
@@ -138,7 +138,8 @@ namespace wind
 					frameTime, 
 					commandBuffer,
 					camera,
-					globalDescriptorSets[frameIndex]
+					globalDescriptorSets[frameIndex],
+					gameObjects
 				};
 
 
@@ -149,7 +150,7 @@ namespace wind
 
 				//render phase
 				lveRenderer.beginSwapchainRenderPass(commandBuffer);
-				simpleRenderSystem.renderGameObjects(frameInfo, gameObjects);
+				simpleRenderSystem.renderGameObjects(frameInfo);
 				lveRenderer.endSwapchainRenderPass(commandBuffer);
 				lveRenderer.endFrame();
 			}
@@ -176,7 +177,7 @@ namespace wind
 		flatVase.model = lveModel;
 		flatVase.transform.translation = {0.5f, 0.5f, 0.f};
 		flatVase.transform.scale = 3.0f;
-		gameObjects.push_back(std::move(flatVase));
+		gameObjects.emplace(flatVase.getId(), std::move(flatVase));
 
 		lveModel = LveModel::createModel_from_file(device, "obj_models/smooth_vase.obj");
 
@@ -184,7 +185,7 @@ namespace wind
 		gameObj.model = lveModel;
 		gameObj.transform.translation = {-0.5f, 0.5f, 0.f};
 		gameObj.transform.scale = 3.0f;
-		gameObjects.push_back(std::move(gameObj));
+		gameObjects.emplace(gameObj.getId(), std::move(gameObj));
 
 		lveModel = LveModel::createModel_from_file(device, "obj_models/floor.obj");
 
@@ -192,6 +193,6 @@ namespace wind
 		floor.model = lveModel;
 		floor.transform.translation = {0.f, 0.5f, 0.f};
 		floor.transform.scale = 3.0f;
-		gameObjects.push_back(std::move(floor));
+		gameObjects.emplace(floor.getId(), std::move(floor));
 	}
 }

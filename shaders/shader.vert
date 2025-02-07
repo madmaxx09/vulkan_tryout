@@ -6,6 +6,8 @@ layout(location = 2) in vec3 normal;
 layout(location = 3) in vec2 uv;
 
 layout(location = 0) out vec3 fragColor;
+layout(location = 1) out vec3 fragWorldPos;
+layout(location = 2) out vec3 fragWorldNormal;
 
 layout(set = 0, binding = 0) uniform GlobalUBO {
 	mat4 projectionView;
@@ -26,16 +28,8 @@ void main()
 	vec4 vertexWorldSpace = push.modelMatrix * vec4(position, 1.0);
 	gl_Position = ubo.projectionView * vertexWorldSpace;
 
-	vec3 normalWorldSpace = normalize(mat3(push.normalMatrix) * normal);
-
-	vec3 directionToLight = ubo.lightPosition - vertexWorldSpace.xyz;
-	float attenuation = 1.0 / dot(directionToLight, directionToLight); //this is equivalent to real world physics formula for light attenuation which is (1 / distance²)
-
-	vec3 lightColor = ubo.lightColor.xyz * ubo.lightColor.w * attenuation;
-	vec3 ambientLight = ubo.ambientLight.xyz * ubo.ambientLight.w;
-	vec3 diffuseLight = lightColor * max(dot(normalWorldSpace, normalize(directionToLight)), 0); //value can be neg if surface is opposite to light dir
- 
-
-	fragColor = (diffuseLight + ambientLight) * color;
+	fragWorldNormal = normalize(mat3(push.normalMatrix) * normal);
+	fragWorldPos = vertexWorldSpace.xyz;
+	fragColor = color;
 }
 

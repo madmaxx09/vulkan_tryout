@@ -62,7 +62,7 @@ namespace wind
 			pipelineConfig);
 	}
 
-	void SimpleRenderSystem::renderGameObjects(s_frame_info &frameInfo, std::vector<LveGameObject>& gameObjects)
+	void SimpleRenderSystem::renderGameObjects(s_frame_info &frameInfo)
 	{
 		pipeline->bind(frameInfo.commandBuffer);
 
@@ -75,9 +75,9 @@ namespace wind
 			0, nullptr
 		);
 
-		for (auto& obj: gameObjects)
+		for (auto& kv: frameInfo.gameObjects)
 		{
-
+			auto &obj = kv.second;
 			SimplePushConstantData push {};
 			push.modelMatrix = obj.transform.mat4();
 			push.normalMatrix = obj.transform.mat4();
