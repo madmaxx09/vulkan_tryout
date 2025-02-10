@@ -7,12 +7,12 @@ layout (location = 2) in vec3 fragWorldNormal;
 layout (location = 0) out vec4 outColor; //layout nous dis ou cette variable va etre output out vec4 défini son type et outColor est le nom de ce "type" de variable
 
 layout(set = 0, binding = 0) uniform GlobalUBO {
-	mat4 projectionView;
+	mat4 projection;
+	mat4 view;
 	vec4 ambientLight;
 	vec3 lightPosition;
 	vec4 lightColor;
 } ubo;
-
 
 layout(push_constant) uniform Push {
 	mat4 modelMatrix;

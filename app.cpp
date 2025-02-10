@@ -3,6 +3,7 @@
 #include <iostream>
 #include <chrono>
 #include "simple_render_system.hpp"
+#include "point_light_system.hpp"
 #include "camera.hpp"
 #include "keyboard.hpp"
 
@@ -17,7 +18,8 @@ namespace wind
 	//meh using vec4 for colors instead of vec3 where color scaling is on xyz might be heavier for no reason idk
 	struct GlobalUBO //if something does not work always check alignement of ubo into shader (std140) 
 	{
-		glm::mat4	projectionView{1.f};
+		glm::mat4	projection{1.f};
+		glm::mat4	view{1.f};
 		glm::vec4	ambientLight{1.f, 1.f, 1.f, 0.02f}; //w is light intensity
 		glm::vec3	lightPosition{-1.f};
 		alignas(16) glm::vec4 lightColor{1.f}; //so here intensity is 1
@@ -105,6 +107,7 @@ namespace wind
 		}
 
 		SimpleRenderSystem simpleRenderSystem{device, lveRenderer.getSwapChainRenderPass(), layout}; //pipeline is created here
+		PointLightSystem pointLightSystem{device, lveRenderer.getSwapChainRenderPass(), layout};
 		LveCamera camera{};
 		camera.setViewTarget(glm::vec3(-1.f, -2.f, 2.f), glm::vec3(0.f, 0.f, 2.5f));
 
@@ -144,13 +147,15 @@ namespace wind
 
 
 				//update UBO /other buffers later maybe
-				ubo.projectionView = camera.getProjection() * camera.getView();
+				ubo.projection = camera.getProjection();
+				ubo.view = camera.getView();
 				memcpy(uboBuffers[frameIndex].data, &ubo, sizeof(GlobalUBO));
 
 
 				//render phase
 				lveRenderer.beginSwapchainRenderPass(commandBuffer);
 				simpleRenderSystem.renderGameObjects(frameInfo);
+				pointLightSystem.render(frameInfo);
 				lveRenderer.endSwapchainRenderPass(commandBuffer);
 				lveRenderer.endFrame();
 			}
@@ -194,5 +199,13 @@ namespace wind
 		floor.transform.translation = {0.f, 0.5f, 0.f};
 		floor.transform.scale = 3.0f;
 		gameObjects.emplace(floor.getId(), std::move(floor));
+
+		// std::shared_ptr<LveModel> lveModel = LveModel::createModel_from_file(device, "obj_models/viking_room.obj");
+
+		// auto viking = LveGameObject::createGameObject();
+		// viking.model = lveModel;
+		// viking.transform.translation = {0.f, 0.5f, 0.f};
+		// viking.transform.scale = 3.0f;
+		// gameObjects.emplace(viking.getId(), std::move(viking));
 	}
 }
