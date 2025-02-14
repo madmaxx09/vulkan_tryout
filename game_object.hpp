@@ -29,6 +29,7 @@ namespace wind
 				return LveGameObject{currentId++};
 			}
 
+			static LveGameObject create_point_light(glm::vec3 color = glm::vec3(1.f), float radius = 0.1f, float intensity = 10.f);
 
 			LveGameObject(const LveGameObject&) = delete;
 			LveGameObject& operator=(const LveGameObject&) = delete;
@@ -42,6 +43,9 @@ namespace wind
 			std::shared_ptr<LveModel> model{};
 			glm::vec3 color{};
 			TransformComponent transform{};
+
+			//optionnal value used if the object is a point light
+			float point_light_intensity = -1.0;
 
 		private:
 			LveGameObject(id_t objId) : id{objId} {}
