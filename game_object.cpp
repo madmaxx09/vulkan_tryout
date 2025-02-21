@@ -14,14 +14,14 @@ namespace wind
 		return transform;
 	}
 
-	LveGameObject LveGameObject::create_point_light(glm::vec3 color, float radius, float intensity)
+	LveGameObject LveGameObject::create_point_light(float intensity, glm::vec3 color, float radius)
 	{
 		LveGameObject gameObj = LveGameObject::createGameObject();
 
 		gameObj.color = color;
 		gameObj.transform.scale = radius;
 		gameObj.point_light_intensity = intensity;
-
+		
 		return gameObj;
 	}
 

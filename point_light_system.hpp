@@ -21,6 +21,8 @@ namespace wind
 			PointLightSystem(const PointLightSystem & ) = delete;
 			PointLightSystem& operator=(const PointLightSystem & ) = delete;
 
+
+			void update(s_frame_info &frameinfo, GlobalUBO &ubo);
 			void render(s_frame_info &frameinfo);
 
 

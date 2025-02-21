@@ -15,18 +15,6 @@
 
 namespace wind
 {
-	//meh using vec4 for colors instead of vec3 where color scaling is on xyz might be heavier for no reason idk
-	struct GlobalUBO //if something does not work always check alignement of ubo into shader (std140) 
-	{
-		glm::mat4	projection{1.f};
-		glm::mat4	view{1.f};
-		glm::vec4	ambientLight{1.f, 1.f, 1.f, 0.02f}; //w is light intensity
-		glm::vec3	lightPosition{-1.f};
-		alignas(16) glm::vec4 lightColor{1.f}; //so here intensity is 1
-
-
-	};
- 
 	App::App()
 	{
 		// std::cout << "Size of app : " << sizeof(App) << std::endl;
@@ -43,7 +31,6 @@ namespace wind
 			{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 4}
 		};
 		globalDescriptorPool.init(device, 100, poolRatios);
-		//}
 		LoadGameObjects();
 	}
 
@@ -118,7 +105,6 @@ namespace wind
 		KeyboardMovementController cameraController{};
 
 		auto currentTime = std::chrono::high_resolution_clock::now(); 
-
 		while(!appWindow.shouldClose())
 		{
 			glfwPollEvents(); //get events like keystrokes/clicking/...
@@ -149,6 +135,8 @@ namespace wind
 				//update UBO /other buffers later maybe
 				ubo.projection = camera.getProjection();
 				ubo.view = camera.getView();
+				pointLightSystem.update(frameInfo, ubo);
+
 				memcpy(uboBuffers[frameIndex].data, &ubo, sizeof(GlobalUBO));
 
 
@@ -199,6 +187,28 @@ namespace wind
 		floor.transform.translation = {0.f, 0.5f, 0.f};
 		floor.transform.scale = 3.0f;
 		gameObjects.emplace(floor.getId(), std::move(floor));
+
+		std::vector<glm::vec3> lightColors {
+			{1.f, .1f, .1f},
+			{.1f, .1f, 1.f},
+			{.1f, 1.f, .1f},
+			{1.f, 1.f, .1f},
+			{.1f, 1.f, 1.f},
+			{1.f, 1.f, 1.f}
+		};
+
+		for (int i = 0; i < lightColors.size(); i++)
+		{
+			auto pointLight = LveGameObject::create_point_light(0.2f);
+			pointLight.color = lightColors[i];
+			auto rotateLight = glm::rotate(
+				glm::mat4(1.f),
+				(i * glm::two_pi<float>()) / lightColors.size(),
+				{0.f, -1.f, 0.f});
+			pointLight.transform.translation = glm::vec3(rotateLight * glm::vec4(-1.f, -1.f, -1.f, 1.f));
+			gameObjects.emplace(pointLight.getId(), std::move(pointLight));
+		}
+
 
 		// std::shared_ptr<LveModel> lveModel = LveModel::createModel_from_file(device, "obj_models/viking_room.obj");
 

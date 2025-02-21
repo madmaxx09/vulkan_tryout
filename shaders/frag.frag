@@ -6,12 +6,17 @@ layout (location = 2) in vec3 fragWorldNormal;
 
 layout (location = 0) out vec4 outColor; //layout nous dis ou cette variable va etre output out vec4 défini son type et outColor est le nom de ce "type" de variable
 
+struct PointLight {
+	vec4 position;
+	vec4 color;
+};
+
 layout(set = 0, binding = 0) uniform GlobalUBO {
 	mat4 projection;
 	mat4 view;
 	vec4 ambientLight;
-	vec3 lightPosition;
-	vec4 lightColor;
+	PointLight pointLights[10]; //look into speciliazition constants
+	int lightCount;
 } ubo;
 
 layout(push_constant) uniform Push {
@@ -21,13 +26,20 @@ layout(push_constant) uniform Push {
 
 void main()
 {
-	vec3 directionToLight = ubo.lightPosition - fragWorldPos;
-	float attenuation = 1.0 / dot(directionToLight, directionToLight); //this is equivalent to real world physics formula for light attenuation which is (1 / distance²)
+	vec3 diffuseLight = ubo.ambientLight.xyz * ubo.ambientLight.w;
+	vec3 surfaceNormal = normalize(fragWorldNormal);
 
-	vec3 lightColor = ubo.lightColor.xyz * ubo.lightColor.w * attenuation;
-	vec3 ambientLight = ubo.ambientLight.xyz * ubo.ambientLight.w;
-	vec3 diffuseLight = lightColor * max(dot(normalize(fragWorldNormal), normalize(directionToLight)), 0); //value can be neg if surface is opposite to light dir
+	for (int i = 0; i < ubo.lightCount; i++)
+	{
+		PointLight light = ubo.pointLights[i];
+		vec3 directionToLight = light.position.xyz - fragWorldPos;
+		float attenuation = 1.0 / dot(directionToLight, directionToLight); //this is equivalent to real world physics formula for light attenuation which is (1 / distance²)
+		float cosAngInc = max(dot(normalize(fragWorldNormal), normalize(directionToLight)), 0); //value can be neg if surface is opposite to light dir
+		vec3 intensity = light.color.xyz * light.color.w * attenuation;
+
+		diffuseLight += intensity * cosAngInc;
+	}
  
 
-	outColor = vec4((diffuseLight + ambientLight) * fragColor, 1.0);
+	outColor = vec4(diffuseLight * fragColor, 1.0);
 }

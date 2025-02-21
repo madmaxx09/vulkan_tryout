@@ -29,7 +29,7 @@ namespace wind
 				return LveGameObject{currentId++};
 			}
 
-			static LveGameObject create_point_light(glm::vec3 color = glm::vec3(1.f), float radius = 0.1f, float intensity = 10.f);
+			static LveGameObject create_point_light(float intensity = 10.f, glm::vec3 color = glm::vec3(1.f), float radius = 0.1f);
 
 			LveGameObject(const LveGameObject&) = delete;
 			LveGameObject& operator=(const LveGameObject&) = delete;

@@ -78,6 +78,8 @@ namespace wind
 		for (auto& kv: frameInfo.gameObjects)
 		{
 			auto &obj = kv.second;
+			if (obj.point_light_intensity != -1) //our simple way to check if the object is a point light
+				continue;
 			SimplePushConstantData push {};
 			push.modelMatrix = obj.transform.mat4();
 			push.normalMatrix = obj.transform.mat4();
