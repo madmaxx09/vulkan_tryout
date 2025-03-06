@@ -46,13 +46,10 @@ namespace wind
 		t_buffer uboBuffers[LveSwapChain::MAX_FRAMES_IN_FLIGHT];//one buffer per frame, to allow updating a buffer without affecting the currently rendered frame
 		for (t_buffer &buffer : uboBuffers)
 		{
-			//std::cout << &buffer << std::endl;
 			initialise_buffer(buffer, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
 				VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,
 				device, sizeof(GlobalUBO));
 			vkMapMemory(device.device(), buffer.memory, 0, sizeof(GlobalUBO), 0, &buffer.data);
-			//std::cout << "does buffer == buffer : " << buffer.buffer << std::endl;
-
 		}
 
 		//this whole block should look better
@@ -135,6 +132,7 @@ namespace wind
 				//update UBO /other buffers later maybe
 				ubo.projection = camera.getProjection();
 				ubo.view = camera.getView();
+				ubo.inverseView = camera.getInverseViewMatrix();
 				pointLightSystem.update(frameInfo, ubo);
 
 				memcpy(uboBuffers[frameIndex].data, &ubo, sizeof(GlobalUBO));
