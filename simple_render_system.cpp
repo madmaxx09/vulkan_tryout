@@ -62,6 +62,28 @@ namespace wind
 			pipelineConfig);
 	}
 
+	void SimpleRenderSystem::applyPhysics(s_frame_info &frameInfo, GlobalUBO &ubo)
+	{
+		auto &dt = frameInfo.frameTime;
+		for (auto &kv : frameInfo.gameObjects)
+		{
+			auto &obj = kv.second;
+			if (obj.mass == -1.0 || obj.mass == EARTH)
+				continue;
+			if (obj.transform.translation.y < floor_y)
+			{
+				obj.speed.y += GRAVITY * dt;
+				obj.transform.translation += obj.speed * dt;
+				if (obj.transform.translation.y > floor_y)
+					obj.transform.translation.y = floor_y;
+			}
+			else
+			{
+				obj.speed.y = 0;
+			}
+		}
+	}
+
 	void SimpleRenderSystem::renderGameObjects(s_frame_info &frameInfo)
 	{
 		pipeline->bind(frameInfo.commandBuffer);
@@ -75,7 +97,7 @@ namespace wind
 			0, nullptr
 		);
 
-		for (auto& kv: frameInfo.gameObjects)
+		for (auto &kv: frameInfo.gameObjects)
 		{
 			auto &obj = kv.second;
 			if (obj.point_light_intensity != -1) //our simple way to check if the object is a point light

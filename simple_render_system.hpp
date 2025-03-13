@@ -21,7 +21,9 @@ namespace wind
 			SimpleRenderSystem(const SimpleRenderSystem & ) = delete;
 			SimpleRenderSystem& operator=(const SimpleRenderSystem & ) = delete;
 
+			void applyPhysics(s_frame_info &frameinfo, GlobalUBO &ubo);
 			void renderGameObjects(s_frame_info &frameinfo);
+			float floor_y;
 
 
 		private:
@@ -32,5 +34,8 @@ namespace wind
 
 			std::unique_ptr<Pipeline> pipeline; //probly stack allocatable
 			VkPipelineLayout pipelineLayout;
+
+			//physical properties
+
 	};
 }

@@ -91,12 +91,19 @@ namespace wind
 		}
 
 		SimpleRenderSystem simpleRenderSystem{device, lveRenderer.getSwapChainRenderPass(), layout}; //pipeline is created here
+		for (auto &kv : gameObjects)
+		{
+			auto &obj = kv.second;
+
+			if (obj.mass == EARTH)
+				simpleRenderSystem.floor_y = obj.transform.translation.y;
+		}
 		PointLightSystem pointLightSystem{device, lveRenderer.getSwapChainRenderPass(), layout};
 		LveCamera camera{};
 		camera.setViewTarget(glm::vec3(-1.f, -2.f, 2.f), glm::vec3(0.f, 0.f, 2.5f));
 
 		auto viewerObject = LveGameObject::createGameObject();
-		viewerObject.transform.translation.z = -2.5f;
+		viewerObject.transform.translation.z = -5.5f;
 
 
 		KeyboardMovementController cameraController{};
@@ -134,6 +141,9 @@ namespace wind
 				ubo.view = camera.getView();
 				ubo.inverseView = camera.getInverseViewMatrix();
 				pointLightSystem.update(frameInfo, ubo);
+				
+				//
+				simpleRenderSystem.applyPhysics(frameInfo, ubo);
 
 				memcpy(uboBuffers[frameIndex].data, &ubo, sizeof(GlobalUBO));
 
@@ -166,17 +176,18 @@ namespace wind
 
 		auto flatVase = LveGameObject::createGameObject();
 		flatVase.model = lveModel;
-		flatVase.transform.translation = {0.5f, 0.5f, 0.f};
+		flatVase.transform.translation = {0.5f, 0.3f, 0.f};
 		flatVase.transform.scale = 3.0f;
 		gameObjects.emplace(flatVase.getId(), std::move(flatVase));
 
 		lveModel = LveModel::createModel_from_file(device, "obj_models/smooth_vase.obj");
 
-		auto gameObj = LveGameObject::createGameObject();
-		gameObj.model = lveModel;
-		gameObj.transform.translation = {-0.5f, 0.5f, 0.f};
-		gameObj.transform.scale = 3.0f;
-		gameObjects.emplace(gameObj.getId(), std::move(gameObj));
+		auto smoothVase = LveGameObject::createGameObject();
+		smoothVase.model = lveModel;
+		smoothVase.transform.translation = {-0.5f, -2.5f, 0.f};
+		smoothVase.transform.scale = 3.0f;
+		smoothVase.mass = 0.3f;
+		gameObjects.emplace(smoothVase.getId(), std::move(smoothVase));
 
 		lveModel = LveModel::createModel_from_file(device, "obj_models/floor.obj");
 
@@ -184,8 +195,9 @@ namespace wind
 		floor.model = lveModel;
 		floor.transform.translation = {0.f, 0.5f, 0.f};
 		floor.transform.scale = 3.0f;
+		floor.mass = EARTH;
 		gameObjects.emplace(floor.getId(), std::move(floor));
-
+		
 		std::vector<glm::vec3> lightColors {
 			{1.f, .1f, .1f},
 			{.1f, .1f, 1.f},

@@ -4,6 +4,13 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <memory>
 #include <unordered_map>
+
+
+//physics constants
+#include <limits>
+constexpr float EARTH = std::numeric_limits<float>::infinity();
+constexpr float GRAVITY = 9.81f;
+
 namespace wind
 {
 	struct TransformComponent
@@ -46,6 +53,11 @@ namespace wind
 
 			//optionnal value used if the object is a point light
 			float point_light_intensity = -1.0;
+
+			//physical properties
+			float mass = -1.0;
+			glm::vec3 speed{0.f};
+			glm::vec3 acceleration{0.f};
 
 		private:
 			LveGameObject(id_t objId) : id{objId} {}
