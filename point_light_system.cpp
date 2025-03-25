@@ -1,6 +1,7 @@
 #include "point_light_system.hpp"
 #include <array>
 #include <iostream>
+#include <map>
 
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
@@ -53,6 +54,7 @@ namespace wind
 
 		PipelineConfigInfo pipelineConfig{};
 		Pipeline::defaultPipelineConfigInfo(pipelineConfig);
+		Pipeline::enableAlphaBlending(pipelineConfig);
 		pipelineConfig.attributeDescriptions.clear();
 		pipelineConfig.bindingDescriptions.clear();
 		
@@ -91,6 +93,18 @@ namespace wind
 
 	void PointLightSystem::render(s_frame_info &frameInfo)
 	{
+		std::map<float, LveGameObject::id_t> sorted;
+
+		for (auto &kv: frameInfo.gameObjects)
+		{
+			auto &obj = kv.second;
+			if (obj.point_light_intensity == -1)
+				continue;
+			
+			auto offset = frameInfo.camera.getPosition() - obj.transform.translation;
+			float disSquared = glm::dot(offset, offset);
+			sorted[disSquared] = obj.getId();
+		}
 		pipeline->bind(frameInfo.commandBuffer);
 
 		vkCmdBindDescriptorSets(
@@ -102,11 +116,9 @@ namespace wind
 			0, nullptr
 		);
 
-		for (auto &kv: frameInfo.gameObjects)
+		for (auto it = sorted.rbegin(); it != sorted.rend(); ++it)
 		{
-			auto &obj = kv.second;
-			if (obj.point_light_intensity == -1)
-				continue;
+			auto &obj = frameInfo.gameObjects.at(it->second);
 			
 			PointLightPushConstants push{};
 			push.position = glm::vec4(obj.transform.translation, 1.f);

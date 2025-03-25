@@ -148,9 +148,10 @@ namespace wind
 				memcpy(uboBuffers[frameIndex].data, &ubo, sizeof(GlobalUBO));
 
 
-				//render phase
+				//render phase ORDER MATTERS 
 				lveRenderer.beginSwapchainRenderPass(commandBuffer);
 				simpleRenderSystem.renderGameObjects(frameInfo);
+				
 				pointLightSystem.render(frameInfo);
 				lveRenderer.endSwapchainRenderPass(commandBuffer);
 				lveRenderer.endFrame();
@@ -178,6 +179,7 @@ namespace wind
 		flatVase.model = lveModel;
 		flatVase.transform.translation = {0.5f, 0.3f, 0.f};
 		flatVase.transform.scale = 3.0f;
+		flatVase.mass = 0.3f;
 		gameObjects.emplace(flatVase.getId(), std::move(flatVase));
 
 		lveModel = LveModel::createModel_from_file(device, "obj_models/smooth_vase.obj");
