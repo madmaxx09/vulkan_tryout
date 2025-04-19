@@ -3,6 +3,25 @@
 
 namespace wind
 {
+	VkDescriptorPool DescriptorPool::get_default_pool(EngineDevice &device)
+	{
+		VkDescriptorPool newPool;
+		if (readyPools.size() != 0)
+		{
+			newPool = readyPools.back();
+			readyPools.pop_back();
+		}
+		else
+		{
+			newPool = create_pool(device, maxSetsPerPool, ratios);
+
+			maxSetsPerPool *= 1.5;
+			if (maxSetsPerPool > 4092)
+				maxSetsPerPool = 4092;
+		}
+		return newPool;
+	}
+
 	VkDescriptorPool DescriptorPool::get_pool(EngineDevice &device)
 	{
 		VkDescriptorPool newPool;
@@ -94,7 +113,7 @@ namespace wind
 	void DescriptorPool::allocate(EngineDevice &device, VkDescriptorSetLayout layout, VkDescriptorSet &descriptorSet, void* pNext)
 	{
 		VkDescriptorPool pool_to_use = get_pool(device);
-
+		
 		VkDescriptorSetAllocateInfo allocInfo{};
 		allocInfo.pNext = pNext;
 		allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;

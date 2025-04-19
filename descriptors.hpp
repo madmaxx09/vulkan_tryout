@@ -32,6 +32,7 @@ namespace wind
 			void clear_pools(EngineDevice &device);
 			void destroy_pools(EngineDevice &device);
 			void allocate(EngineDevice &device, VkDescriptorSetLayout layout, VkDescriptorSet &descriptorSet, void* pNext);
+			VkDescriptorPool get_default_pool(EngineDevice &device);
 
 		private:
 			VkDescriptorPool get_pool(EngineDevice &device);

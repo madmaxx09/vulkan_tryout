@@ -6,6 +6,10 @@
 #include "point_light_system.hpp"
 #include "camera.hpp"
 #include "keyboard.hpp"
+#include "imgui.h"
+#include "imgui/backends/imgui_impl_glfw.h"
+#include "imgui/backends/imgui_impl_vulkan.h"
+
 
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
@@ -31,6 +35,21 @@ namespace wind
 			{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 4}
 		};
 		globalDescriptorPool.init(device, 100, poolRatios);
+
+		std::vector<DescriptorPool::PoolSizeRatio> imGuiPoolRatios = {
+			{ VK_DESCRIPTOR_TYPE_SAMPLER, 1 },
+			{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1 },
+			{ VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 1 },
+			{ VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1 },
+			{ VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, 1 },
+			{ VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER, 1 },
+			{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1 },
+			{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1 },
+			{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 1 },
+			{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, 1 },
+			{ VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 1 }
+		};
+		imGuiDescriptorPool.init(device, 1000, poolRatios);	
 		LoadGameObjects();
 	}
 
@@ -108,6 +127,30 @@ namespace wind
 
 		KeyboardMovementController cameraController{};
 
+		
+		//imgui init //seperated render pass, command, buffer, pool could probly use my allocator
+		ImGui::CreateContext();
+		ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+
+		ImGui_ImplGlfw_InitForVulkan(appWindow.getGLFWwindow(), true);
+
+		ImGui_ImplVulkan_InitInfo info{};
+		info.DescriptorPool = imGuiDescriptorPool.get_default_pool(device);
+		info.Device = device.device();
+		info.PhysicalDevice = device.getPhysicalDevice();
+		info.Instance = device.getInstance();
+		info.ImageCount = LveSwapChain::MAX_FRAMES_IN_FLIGHT;
+		info.MinImageCount = LveSwapChain::MAX_FRAMES_IN_FLIGHT;
+		//info.QueueFamily = divice.g
+		info.Queue = device.graphicsQueue();
+		info.RenderPass = lveRenderer.getSwapChainRenderPass();
+		ImGui_ImplVulkan_Init(&info);
+
+		//VkCommandBuffer commandBuffer = device.beginSingleTimeCommands();
+		ImGui_ImplVulkan_CreateFontsTexture();
+
+		//imgui init ended , should put in other file/function
+
 		auto currentTime = std::chrono::high_resolution_clock::now(); 
 		while(!appWindow.shouldClose())
 		{
@@ -142,7 +185,7 @@ namespace wind
 				ubo.inverseView = camera.getInverseViewMatrix();
 				pointLightSystem.update(frameInfo, ubo);
 				
-				//
+				//selfexplanatory
 				simpleRenderSystem.applyPhysics(frameInfo, ubo);
 
 				memcpy(uboBuffers[frameIndex].data, &ubo, sizeof(GlobalUBO));
@@ -153,6 +196,18 @@ namespace wind
 				simpleRenderSystem.renderGameObjects(frameInfo);
 				
 				pointLightSystem.render(frameInfo);
+
+				ImGui_ImplVulkan_NewFrame();
+				ImGui_ImplGlfw_NewFrame();
+				ImGui::NewFrame();
+
+				ImGui::ShowDemoWindow();
+
+				ImGui::Render();
+
+				ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), commandBuffer, nullptr);
+
+				//end frame
 				lveRenderer.endSwapchainRenderPass(commandBuffer);
 				lveRenderer.endFrame();
 			}
@@ -167,6 +222,9 @@ namespace wind
 		}
 		globalDescriptorPool.destroy_pools(device);
 		vkDestroyDescriptorSetLayout(device.device(), layout, nullptr);
+		ImGui_ImplVulkan_Shutdown();
+		ImGui_ImplGlfw_Shutdown();
+		ImGui::DestroyContext();
 	}
 
 	

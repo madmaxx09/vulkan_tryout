@@ -32,6 +32,7 @@ namespace wind
 			LveRenderer lveRenderer{appWindow, device};
 			
 			DescriptorPool				globalDescriptorPool;//[LveSwapChain::MAX_FRAMES_IN_FLIGHT]; //a class that pre allocates some VkDescriptorPool 
+			DescriptorPool				imGuiDescriptorPool;
 			LveGameObject::Map	gameObjects;
 	};
 }
