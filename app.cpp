@@ -208,6 +208,7 @@ namespace wind
 				ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), commandBuffer, nullptr);
 
 				//end frame
+				//disabled vkFreeDescriptorSet in the imgui implFile seems sketchy need to investigate
 				lveRenderer.endSwapchainRenderPass(commandBuffer);
 				lveRenderer.endFrame();
 			}
@@ -221,9 +222,11 @@ namespace wind
 			destroy_buffer(buffer, device);
 		}
 		globalDescriptorPool.destroy_pools(device);
+		imGuiDescriptorPool.destroy_pools(device);
 		vkDestroyDescriptorSetLayout(device.device(), layout, nullptr);
 		ImGui_ImplVulkan_Shutdown();
 		ImGui_ImplGlfw_Shutdown();
+		vkDestroyDescriptorPool(device.device(), info.DescriptorPool, nullptr);
 		ImGui::DestroyContext();
 	}
 
