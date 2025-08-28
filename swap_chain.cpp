@@ -405,7 +405,7 @@ VkSurfaceFormatKHR LveSwapChain::chooseSwapSurfaceFormat(
 {
 	for (const auto &availableFormat : availableFormats)
 	{
-		if (availableFormat.format == VK_FORMAT_B8G8R8A8_SRGB && //looks for this format which is standard high quality
+		if (availableFormat.format == VK_FORMAT_B8G8R8A8_UNORM && //looks for this format which is standard high quality
 				availableFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {//and for this color scheme which is close to reality
 			return availableFormat;
 		}

@@ -6,9 +6,6 @@
 #include "point_light_system.hpp"
 #include "camera.hpp"
 #include "keyboard.hpp"
-#include "imgui.h"
-#include "imgui/backends/imgui_impl_glfw.h"
-#include "imgui/backends/imgui_impl_vulkan.h"
 
 
 #define GLM_FORCE_RADIANS
@@ -21,13 +18,6 @@ namespace wind
 {
 	App::App()
 	{
-		// std::cout << "Size of app : " << sizeof(App) << std::endl;
-		// std::cout << "Size of window : " << sizeof(Window) << std::endl;
-		// std::cout << "Size of cam : " << sizeof(LveCamera) << std::endl;
-		// std::cout << "Size of engine : " << sizeof(EngineDevice) << std::endl;
-		// std::cout << "Size of renderer : " << sizeof(LveRenderer) << std::endl;
-		// for (int i = 0; i < LveSwapChain::MAX_FRAMES_IN_FLIGHT; i++)
-		// {
 		std::vector<DescriptorPool::PoolSizeRatio> poolRatios = {
 			{ VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 3},
 			{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 3},
@@ -49,7 +39,8 @@ namespace wind
 			{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, 1 },
 			{ VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 1 }
 		};
-		imGuiDescriptorPool.init(device, 1000, poolRatios);	
+		imGuiDescriptorPool.init(device, 1000, imGuiPoolRatios);
+		initImGui();	
 		LoadGameObjects();
 	}
 
@@ -59,7 +50,6 @@ namespace wind
 
 	void App::run()
 	{
-
 		GlobalUBO ubo{};
 
 		t_buffer uboBuffers[LveSwapChain::MAX_FRAMES_IN_FLIGHT];//one buffer per frame, to allow updating a buffer without affecting the currently rendered frame
@@ -123,33 +113,9 @@ namespace wind
 
 		auto viewerObject = LveGameObject::createGameObject();
 		viewerObject.transform.translation.z = -5.5f;
-
+		Player player(viewerObject);
 
 		KeyboardMovementController cameraController{};
-
-		
-		//imgui init //seperated render pass, command, buffer, pool could probly use my allocator
-		ImGui::CreateContext();
-		ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
-
-		ImGui_ImplGlfw_InitForVulkan(appWindow.getGLFWwindow(), true);
-
-		ImGui_ImplVulkan_InitInfo info{};
-		info.DescriptorPool = imGuiDescriptorPool.get_default_pool(device);
-		info.Device = device.device();
-		info.PhysicalDevice = device.getPhysicalDevice();
-		info.Instance = device.getInstance();
-		info.ImageCount = LveSwapChain::MAX_FRAMES_IN_FLIGHT;
-		info.MinImageCount = LveSwapChain::MAX_FRAMES_IN_FLIGHT;
-		//info.QueueFamily = divice.g
-		info.Queue = device.graphicsQueue();
-		info.RenderPass = lveRenderer.getSwapChainRenderPass();
-		ImGui_ImplVulkan_Init(&info);
-
-		//VkCommandBuffer commandBuffer = device.beginSingleTimeCommands();
-		ImGui_ImplVulkan_CreateFontsTexture();
-
-		//imgui init ended , should put in other file/function
 
 		auto currentTime = std::chrono::high_resolution_clock::now(); 
 		while(!appWindow.shouldClose())
@@ -164,7 +130,7 @@ namespace wind
 			camera.setViewYXZ(viewerObject.transform.translation, viewerObject.transform.rotation);
 
 			float aspect = lveRenderer.getAspectRatio();
-			camera.setPerspectiveProjection(glm::radians(50.f), aspect, .1f, 10.f); //last 2 values are very relevant here cause objects outside these bounds will get clipped
+			camera.setPerspectiveProjection(glm::radians(50.f), aspect, .1f, 50.f); //last 2 values are very relevant here cause objects outside these bounds will get clipped
 			
 			if (auto commandBuffer = lveRenderer.beginFrame())
 			{
@@ -187,7 +153,11 @@ namespace wind
 				
 				//selfexplanatory
 				simpleRenderSystem.applyPhysics(frameInfo, ubo);
+				if (multiPlayer == 1) {
+					client->Send(player);
 
+					client->Recv();
+				}
 				memcpy(uboBuffers[frameIndex].data, &ubo, sizeof(GlobalUBO));
 
 
@@ -196,16 +166,7 @@ namespace wind
 				simpleRenderSystem.renderGameObjects(frameInfo);
 				
 				pointLightSystem.render(frameInfo);
-
-				ImGui_ImplVulkan_NewFrame();
-				ImGui_ImplGlfw_NewFrame();
-				ImGui::NewFrame();
-
-				ImGui::ShowDemoWindow();
-
-				ImGui::Render();
-
-				ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), commandBuffer, nullptr);
+				RenderImgui(commandBuffer);
 
 				//end frame
 				//disabled vkFreeDescriptorSet in the imgui implFile seems sketchy need to investigate
@@ -226,7 +187,7 @@ namespace wind
 		vkDestroyDescriptorSetLayout(device.device(), layout, nullptr);
 		ImGui_ImplVulkan_Shutdown();
 		ImGui_ImplGlfw_Shutdown();
-		vkDestroyDescriptorPool(device.device(), info.DescriptorPool, nullptr);
+		vkDestroyDescriptorPool(device.device(), infoImGui.DescriptorPool, nullptr);
 		ImGui::DestroyContext();
 	}
 
@@ -251,6 +212,17 @@ namespace wind
 		smoothVase.transform.scale = 3.0f;
 		smoothVase.mass = 0.3f;
 		gameObjects.emplace(smoothVase.getId(), std::move(smoothVase));
+
+		lveModel = LveModel::createModel_from_file(device, "obj_models/smooth_vase.obj");
+
+		auto playerVase = LveGameObject::createGameObject();
+		playerVase.model = lveModel;
+		playerVase.transform.translation = {0.f, 0.3f, 0.5f};
+		playerVase.transform.scale = 3.0f;
+		playerVase.mass = 0.3f;
+		gameObjects.emplace(playerVase.getId(), std::move(playerVase));
+
+		
 
 		lveModel = LveModel::createModel_from_file(device, "obj_models/floor.obj");
 
@@ -290,5 +262,97 @@ namespace wind
 		// viking.transform.translation = {0.f, 0.5f, 0.f};
 		// viking.transform.scale = 3.0f;
 		// gameObjects.emplace(viking.getId(), std::move(viking));
+	}
+
+	void App::initImGui()
+	{
+		ImGui::CreateContext();
+		ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+
+		ImGui_ImplGlfw_InitForVulkan(appWindow.getGLFWwindow(), true);
+
+		//ImGui_ImplVulkan_InitInfo info{};
+		infoImGui.DescriptorPool = imGuiDescriptorPool.get_default_pool(device);
+		infoImGui.Device = device.device();
+		infoImGui.PhysicalDevice = device.getPhysicalDevice();
+		infoImGui.Instance = device.getInstance();
+		infoImGui.ImageCount = LveSwapChain::MAX_FRAMES_IN_FLIGHT;
+		infoImGui.MinImageCount = LveSwapChain::MAX_FRAMES_IN_FLIGHT;
+		infoImGui.Queue = device.graphicsQueue();
+		infoImGui.RenderPass = lveRenderer.getSwapChainRenderPass();
+		ImGui_ImplVulkan_Init(&infoImGui);
+
+		ImGui_ImplVulkan_CreateFontsTexture();
+	}
+
+	void App::RenderImgui(const VkCommandBuffer &commandBuffer)
+	{
+		ImGui_ImplVulkan_NewFrame();
+		ImGui_ImplGlfw_NewFrame();
+		ImGui::NewFrame();
+				
+		static char inputBuffer[128] = "";
+
+		if (ImGui::Begin("Menu"))
+		{
+			if (ImGui::BeginTabBar("Menu"))
+			{
+				if (ImGui::BeginTabItem("Connection"))
+				{
+					ImGui::TextWrapped("Enter the room code:");
+					ImGui::InputText("##Input", inputBuffer, IM_ARRAYSIZE(inputBuffer));
+			
+					ImGui::SameLine();
+			
+					if (ImGui::Button("Connect")) {
+						std::cout << "Connect clicked with input: " << inputBuffer << std::endl;
+						std::string inputStr(inputBuffer);
+						connectToServer(inputStr);
+					}
+					ImGui::EndTabItem();
+				}
+				if (ImGui::BeginTabItem("Add Items"))
+				{
+					if (ImGui::Button("Add vase"))
+					{
+						std::cout << "Add vase pressed" << std::endl;
+						spawnVase();
+					}
+					ImGui::EndTabItem();
+				}
+				ImGui::EndTabBar();
+			}
+	
+			// Champ texte
+	
+			ImVec2 windowSize = ImGui::GetWindowSize();
+			ImVec2 textSize = ImGui::CalcTextSize("FPS: 000.0");
+	
+			// Position : coin inférieur droit moins la taille du texte et un petit padding
+			ImVec2 pos(windowSize.x - textSize.x - 10.0f, windowSize.y - textSize.y - 10.0f);
+	
+			// Position relative au début de la fenêtre (curseur à 0,0)
+			//ImGui::SetCursorPos(pos);
+			ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
+		}
+
+		ImGui::End();
+
+		ImGui::Render();
+
+		ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), commandBuffer, nullptr);		
+	}
+
+	void App::connectToServer(std::string &input)
+	{
+		std::cout << "in Connect" << std::endl;
+		
+		client = std::make_unique<Client>(input);
+		multiPlayer = 1;
+	}
+
+	void App::spawnVase()
+	{
+		
 	}
 }

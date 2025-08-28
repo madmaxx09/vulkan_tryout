@@ -1,4 +1,4 @@
-CFLAGS = -std=c++17 -O2 -g -Iimgui -Iimgui/backends #fsanitize=address
+CFLAGS = -std=c++17 -g -Iimgui -Iimgui/backends #-O2 #fsanitize=address
 LDFLAGS = -lglfw -lvulkan -ldl -lpthread -lX11 -lXxf86vm -lXrandr -lXi
 
 SRC = $(wildcard *.cpp) \

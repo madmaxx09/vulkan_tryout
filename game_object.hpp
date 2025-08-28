@@ -38,8 +38,8 @@ namespace wind
 
 			static LveGameObject create_point_light(float intensity = 10.f, glm::vec3 color = glm::vec3(1.f), float radius = 0.1f);
 
-			LveGameObject(const LveGameObject&) = delete;
-			LveGameObject& operator=(const LveGameObject&) = delete;
+			LveGameObject(const LveGameObject&) = default;
+			LveGameObject& operator=(const LveGameObject&) = default;
 			LveGameObject(LveGameObject &&) = default;
 			LveGameObject& operator=(LveGameObject &&) = default;
 
